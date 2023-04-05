@@ -1,0 +1,4 @@
+<resources>
+
+    <style name="Theme.project6mSignage" parent="@style/Theme.Leanback" />
+</resources>

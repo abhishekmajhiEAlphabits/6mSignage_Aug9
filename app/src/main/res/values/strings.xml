@@ -1,0 +1,38 @@
+<resources>
+    <string name="app_name">6mSignage</string>
+    <string name="browse_title">Videos by Your Company</string>
+    <string name="related_movies">Related Videos</string>
+    <string name="grid_view">Grid View</string>
+    <string name="error_fragment">Error Fragment</string>
+    <string name="personal_settings">Personal Settings</string>
+    <string name="watch_trailer_1">Watch trailer</string>
+    <string name="watch_trailer_2">FREE</string>
+    <string name="rent_1">Rent By Day</string>
+    <string name="rent_2">From $1.99</string>
+    <string name="buy_1">Buy and Own</string>
+    <string name="buy_2">AT $9.99</string>
+    <string name="movie">Movie</string>
+
+    <!-- Error messages -->
+    <string name="error_fragment_message">An error occurred</string>
+    <string name="dismiss_error">Dismiss</string>
+
+    <!--    Dialog exit-->
+    <string name="dialog_exit_exit">Re-installation</string>
+    <string name="dialog_exit_do_you_want_to_close_app">Do you want to reset all settings?</string>
+    <string name="dialog_exit_no">No</string>
+    <string name="dialog_exit_yes">Yes</string>
+    
+    <!--    Non auto setting dialog-->
+    <string name="reset_all_settings">Reset All settings</string>
+    <string name="play_mode">Play mode</string>
+    <string name="play">Play</string>
+    <!--    Non auto setting dialog-->
+
+    <!--    Play mode dialog-->
+    <string name="play_mode_dialog_real">Real</string>
+    <string name="play_mode_dialog_test">Test</string>
+    <string name="play_mode_dialog_play_mode">Play mode</string>
+    <!--    Play mode dialog-->
+
+</resources>
