@@ -16,6 +16,8 @@ import android.os.Handler
 import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
+import android.view.InputDevice
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.WebStorage
@@ -31,9 +33,12 @@ import com.digitalsln.project6mSignage.databinding.PlayModeDialogBinding
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import android.view.KeyEvent
+import android.view.MotionEvent
+import androidx.appcompat.app.AppCompatActivity
 
 
-class MainActivity : FragmentActivity() {
+class MainActivity : AppCompatActivity() {
 
     private var _binding: ActivityMainBinding? = null
     private val backgroundWebView by lazy { WebView(this) }
@@ -58,6 +63,8 @@ class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+
         try {
             _binding = ActivityMainBinding.inflate(layoutInflater)
             setContentView(binding.root)
@@ -70,9 +77,11 @@ class MainActivity : FragmentActivity() {
             preventFromSleeping()
             binding.webView.initWebView()
 
-            if (!Consts.isAppStartedFromBroadcast) {
-                showHandMadeStartAppDialog()
-            } else binding.webView.loadUrl(sharedPref.getString(LAST_WEB_URL, URL)!!)
+//            if (!Consts.isAppStartedFromBroadcast) {
+//                showHandMadeStartAppDialog()
+//            } else
+                binding.webView.loadUrl(sharedPref.getString(LAST_WEB_URL, URL)!!)
+
         } catch (e: Exception) {
             AlertDialog.Builder(this)
                 .setMessage(e.message)
@@ -85,6 +94,18 @@ class MainActivity : FragmentActivity() {
                 .setNegativeButton("close", null)
                 .show()
         }
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
+         if (event?.keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+            // Handle trackpad button click event
+            // Replace this with your desired action
+             showHandMadeStartAppDialog()
+            Toast.makeText(this, "Upper arrow key pressed", Toast.LENGTH_SHORT).show()
+            return true
+        }
+        //Toast.makeText(this, "Dispatch arrow key pressed" + event?.action, Toast.LENGTH_SHORT).show()
+        return super.dispatchKeyEvent(event)
     }
 
     override fun onStart() {
