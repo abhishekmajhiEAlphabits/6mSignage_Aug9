@@ -1,31 +1,30 @@
 package com.digitalsln.project6mSignage
 
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.AlertDialog
 import android.app.Dialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.net.Uri
-import android.os.Build
+import android.net.ConnectivityManager
 import android.os.Bundle
 import android.os.Handler
 import android.os.PowerManager
-import android.provider.Settings
 import android.util.Log
-import android.view.InputDevice
-import android.view.View
+import android.view.KeyEvent
 import android.view.ViewGroup
 import android.webkit.CookieManager
+import android.webkit.WebSettings
 import android.webkit.WebStorage
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import com.digitalsln.project6mSignage.databinding.ActivityMainBinding
 import com.digitalsln.project6mSignage.databinding.HandMadeStartAppDialogBinding
@@ -33,10 +32,6 @@ import com.digitalsln.project6mSignage.databinding.PlayModeDialogBinding
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import android.view.KeyEvent
-import android.view.MotionEvent
-import androidx.appcompat.app.AppCompatActivity
-
 
 class MainActivity : AppCompatActivity() {
 
@@ -69,18 +64,17 @@ class MainActivity : AppCompatActivity() {
             _binding = ActivityMainBinding.inflate(layoutInflater)
             setContentView(binding.root)
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !Settings.canDrawOverlays(this)) {
-                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
-                startActivityForResult(intent, REQUEST_OVERLAY_PERMISSION)
-            }
-
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !Settings.canDrawOverlays(this)) {
+//                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
+//                startActivityForResult(intent, REQUEST_OVERLAY_PERMISSION)
+//            }
             preventFromSleeping()
             binding.webView.initWebView()
-
+            setCashSettings()
 //            if (!Consts.isAppStartedFromBroadcast) {
 //                showHandMadeStartAppDialog()
 //            } else
-                binding.webView.loadUrl(sharedPref.getString(LAST_WEB_URL, URL)!!)
+            binding.webView.loadUrl(sharedPref.getString(LAST_WEB_URL, URL)!!)
 
         } catch (e: Exception) {
             AlertDialog.Builder(this)
@@ -96,11 +90,27 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun setCashSettings() {
+        binding.webView.settings.allowFileAccess = true
+        binding.webView.settings.cacheMode = WebSettings.LOAD_DEFAULT
+
+        if (!isNetworkAvailable())  //offline
+            binding.webView.settings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+    }
+
+    private fun isNetworkAvailable(): Boolean {
+        val connectivityManager =
+            getSystemService(Activity.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val activeNetworkInfo = connectivityManager.activeNetworkInfo
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected
+    }
+
     override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
-         if (event?.keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+        if (event?.keyCode == KeyEvent.KEYCODE_DPAD_UP) {
             // Handle trackpad button click event
             // Replace this with your desired action
-             showHandMadeStartAppDialog()
+            showHandMadeStartAppDialog()
             Toast.makeText(this, "Upper arrow key pressed", Toast.LENGTH_SHORT).show()
             return true
         }
@@ -122,7 +132,10 @@ class MainActivity : AppCompatActivity() {
             if (testCode.isNotEmpty() && realCode.isEmpty()) tryToParseCode(URL)
             if (showDialog) {
                 if (playModeDialog == null) showPlayModeDialog()
-                if (testCode.isNotEmpty() && realCode.isNotEmpty()) showPlayModeButtons(realCode, testCode)
+                if (testCode.isNotEmpty() && realCode.isNotEmpty()) showPlayModeButtons(
+                    realCode,
+                    testCode
+                )
             } else playModeDialog = null
         }
     }
@@ -180,7 +193,7 @@ class MainActivity : AppCompatActivity() {
         tryToParseCode(TEST_URL)
     }
 
-    private fun showPlayModeDialog(){
+    private fun showPlayModeDialog() {
 
         val dialogBinding = PlayModeDialogBinding.inflate(layoutInflater)
 
@@ -189,7 +202,9 @@ class MainActivity : AppCompatActivity() {
         playModeDialog = Dialog(this).apply {
             setContentView(dialogBinding.root)
             window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            setOnCancelListener { loadCodesState.value = loadCodesState.value.copy(showDialog = false) }
+            setOnCancelListener {
+                loadCodesState.value = loadCodesState.value.copy(showDialog = false)
+            }
         }
 
         dialogBinding.run {
@@ -205,7 +220,10 @@ class MainActivity : AppCompatActivity() {
 
             realButton.setOnClickListener {
                 playModeDialog!!.dismiss()
-                savePlayModePreferences(getPreferences(Context.MODE_PRIVATE), PlayModeDialogChoice.REAL)
+                savePlayModePreferences(
+                    getPreferences(Context.MODE_PRIVATE),
+                    PlayModeDialogChoice.REAL
+                )
                 sharedPref.edit().putString(LAST_WEB_URL, URL).apply()
                 binding.webView.loadUrl(URL)
                 dialogMain?.dismiss()
@@ -213,7 +231,10 @@ class MainActivity : AppCompatActivity() {
 
             testButton.setOnClickListener {
                 playModeDialog!!.dismiss()
-                savePlayModePreferences(getPreferences(Context.MODE_PRIVATE), PlayModeDialogChoice.TEST)
+                savePlayModePreferences(
+                    getPreferences(Context.MODE_PRIVATE),
+                    PlayModeDialogChoice.TEST
+                )
                 sharedPref.edit().putString(LAST_WEB_URL, TEST_URL).apply()
                 binding.webView.loadUrl(TEST_URL)
                 dialogMain?.dismiss()
@@ -255,8 +276,7 @@ class MainActivity : AppCompatActivity() {
                     Log.d(TAG, "from pref realCode $realCode")
                     loadCodesState.value = loadCodesState.value.copy(realCode = realCode)
                 }
-            }
-            else {
+            } else {
                 val testCode = sharedPref.getString(TEST_SCREEN_CODE, null)
                 if (testCode.isNullOrEmpty()) tryToGetTestCodeWithDelay()
                 else {
@@ -277,7 +297,8 @@ class MainActivity : AppCompatActivity() {
                 if (result == "null") {
                     Log.i("WebView", "page is loading")
                     if (numberOfAttempts < DOWNLOAD_CODE_NUMBER) tryToGetRealCodeWithDelay()
-                    else loadCodesState.value = loadCodesState.value.copy(realCode = "Nothing found")
+                    else loadCodesState.value =
+                        loadCodesState.value.copy(realCode = "Nothing found")
                 } else {
                     Log.d(TAG, "class(\"screen-code\") text: $result (${result.length})")
                     val realCode = result.replace("\"", "").trim()
@@ -298,7 +319,8 @@ class MainActivity : AppCompatActivity() {
                 if (result == "null") {
                     Log.i("WebView", "page is loading")
                     if (numberOfAttempts < DOWNLOAD_CODE_NUMBER) tryToGetTestCodeWithDelay()
-                    else loadCodesState.value = loadCodesState.value.copy(testCode = "Nothing found")
+                    else loadCodesState.value =
+                        loadCodesState.value.copy(testCode = "Nothing found")
                 } else {
                     Log.d(TAG, "class(\"screen-code\") text: $result (${result.length})")
                     val testCode = result.replace("\"", "").trim()
@@ -334,7 +356,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun resetAllSettings() {
         WebStorage.getInstance().deleteAllData()
-        binding.webView.run{
+        binding.webView.run {
             clearCache(true)
             clearHistory()
             clearFormData()
@@ -350,7 +372,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun savePlayModePreferences(sharedPref: SharedPreferences, choice: PlayModeDialogChoice) {
+    private fun savePlayModePreferences(
+        sharedPref: SharedPreferences,
+        choice: PlayModeDialogChoice
+    ) {
         val editor = sharedPref.edit()
         editor.putInt(PLAY_MODE_CHOICE_CODE, choice.code)
         editor.apply()

@@ -34,5 +34,6 @@
     <string name="play_mode_dialog_test">Test</string>
     <string name="play_mode_dialog_play_mode">Play mode</string>
     <!--    Play mode dialog-->
+    <string name="connect_lbl">Connect</string>
 
 </resources>

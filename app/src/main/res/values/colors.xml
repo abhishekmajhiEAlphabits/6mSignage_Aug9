@@ -13,4 +13,5 @@
     <color name="text_primary">#000000</color>
     <color name="ginger">#5CA6E6</color>
     <color name="ginger_secondary">#4981B3</color>
+    <color name="holo_green">#87a232</color>
 </resources>
