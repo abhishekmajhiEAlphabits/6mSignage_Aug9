@@ -16,7 +16,7 @@ import android.util.Log
 import androidx.annotation.RequiresApi
 import com.cgutman.adblib.AdbCrypto
 import com.digitalsln.project6mSignage.R
-import com.digitalsln.project6mSignage.LauncherActivity
+import com.digitalsln.project6mSignage.MainActivity
 
 class ShellService : Service(), DeviceConnectionListener {
 
@@ -142,7 +142,7 @@ class ShellService : Service(), DeviceConnectionListener {
 
     private fun createPendingIntentForConnection(devConn: DeviceConnection?): PendingIntent? {
         val appContext: Context = applicationContext
-        val i = Intent(appContext, LauncherActivity::class.java)
+        val i = Intent(appContext, MainActivity::class.java)
         i.putExtra("IP", devConn?.getHost())
         i.putExtra("Port", devConn?.getPort())
         i.action = getConnectionString(devConn)
@@ -155,7 +155,7 @@ class ShellService : Service(), DeviceConnectionListener {
 
     private fun createPendingIntentToLaunchShellActivity(): PendingIntent? {
         val appContext: Context = applicationContext
-        val i = Intent(appContext, LauncherActivity::class.java)
+        val i = Intent(appContext, MainActivity::class.java)
         var flags = PendingIntent.FLAG_UPDATE_CURRENT
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             flags = flags or PendingIntent.FLAG_IMMUTABLE

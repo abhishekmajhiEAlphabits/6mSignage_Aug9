@@ -1,7 +1,6 @@
 package com.digitalsln.project6mSignage.tvLauncher.utilities
 
-import android.widget.TextView
-import com.digitalsln.project6mSignage.CommandSuccess
+import com.digitalsln.project6mSignage.MainActivity
 
 class ConsoleBuffer(bufferSize: Int) {
     private var buffer: CharArray
@@ -31,7 +30,7 @@ class ConsoleBuffer(bufferSize: Int) {
     }
 
     @Synchronized
-    fun updateTextView(textView: TextView, listener: CommandSuccess) {
+    fun updateTextView(listener: MainActivity.CommandSuccess) {
         if (String(buffer).contains("Package com.google.android.tvlauncher new state: disabled-user")) {
             listener.onSuccess()
         }else if(String(buffer).contains("enable")){

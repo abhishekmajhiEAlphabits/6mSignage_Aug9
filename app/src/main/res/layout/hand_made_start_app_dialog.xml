@@ -3,59 +3,71 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     android:background="@drawable/border">
 
+    <TextView
+        android:id="@+id/tv_ip_address"
+        style="@style/Theme_Title_TextView"
+        android:layout_marginTop="15dp"
+        app:layout_constraintBottom_toTopOf="@id/bt_connect"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/gl_v1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent=".25" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/gl_v2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent=".5" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/gl_v3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent=".75" />
+
     <Button
-        android:id="@+id/reset_all_settings_button"
-        android:layout_width="200dp"
-        android:layout_height="120dp"
-        android:layout_marginStart="@dimen/default_margin"
-        android:layout_marginTop="@dimen/dialog_top_margin"
-        android:layout_marginEnd="@dimen/default_margin"
-        android:layout_marginBottom="@dimen/dialog_top_margin"
-        android:background="@drawable/button"
-        android:focusableInTouchMode="false"
+        android:id="@+id/bt_reset_settings"
+        style="@style/Theme_Action_Buttons"
         android:text="@string/reset_all_settings"
-        android:textColor="@color/text_primary"
-        android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/play_mode_button"
-        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintEnd_toStartOf="@id/gl_v1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/play_mode_button"
-        android:layout_width="200dp"
-        android:layout_height="120dp"
-        android:layout_marginStart="@dimen/default_margin"
-        android:layout_marginEnd="@dimen/default_margin"
-        android:background="@drawable/button"
+        android:id="@+id/bt_play_mode"
         android:text="@string/play_mode"
-        android:textColor="@color/text_primary"
-        android:textSize="14sp"
+        style="@style/Theme_Action_Buttons"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/play_button"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/reset_all_settings_button"
+        app:layout_constraintEnd_toStartOf="@id/gl_v2"
+        app:layout_constraintStart_toEndOf="@id/gl_v1"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/play_button"
-        android:layout_width="200dp"
-        android:layout_height="120dp"
-        android:layout_marginStart="@dimen/default_margin"
-        android:layout_marginTop="@dimen/default_margin"
-        android:layout_marginEnd="@dimen/default_margin"
-        android:layout_marginBottom="@dimen/default_margin"
-        android:background="@drawable/button"
+        android:id="@+id/bt_play"
+        style="@style/Theme_Action_Buttons"
         android:text="@string/play"
-        android:textColor="@color/text_primary"
-        android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/play_mode_button"
+        app:layout_constraintEnd_toStartOf="@id/gl_v3"
+        app:layout_constraintStart_toEndOf="@id/gl_v2"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <Button
+        android:id="@+id/bt_connect"
+        style="@style/Theme_Action_Buttons"
+        android:text="@string/connect_lbl"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/gl_v3"
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

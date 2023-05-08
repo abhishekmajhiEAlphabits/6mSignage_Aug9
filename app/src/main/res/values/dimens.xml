@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="default_margin">32dp</dimen>
+    <dimen name="default_margin">10dp</dimen>
     <dimen name="dialog_top_margin">100dp</dimen>
     <dimen name="default_margin_half">8dp</dimen>
     <dimen name="mid_24">24sp</dimen>
