@@ -18,7 +18,6 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
-import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import android.view.KeyEvent
@@ -61,22 +60,13 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     private var playModeDialog: Dialog? = null
     private var numberOfAttempts = 0
 
-    private lateinit var hostIP: String
+    private var hostIP: String? = null
     private var connection: DeviceConnection? = null
     private var service: Intent? = null
     private var binder: ShellService.ShellServiceBinder? = null
     private var connectWaiting: SpinnerDialog? = null
     var currentCommand = connectCommand
     var connectStatusStr = "Connect"
-
-    // values for non-sleeping
-    private val powerManager: PowerManager by lazy {
-        getSystemService(Context.POWER_SERVICE) as PowerManager
-    }
-
-    private val wakeLock: PowerManager.WakeLock by lazy {
-        powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "myapp:mywakelocktag")
-    }
 
     private val binding get() = _binding!!
     private var dialogMain: Dialog? = null
@@ -101,11 +91,12 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
             loadAdbCrypto()
 
+            hostIP = Utils.getIpAddress(this)
+
             Handler().postDelayed({
                 initConnection()
             }, 1500)
 
-//            preventFromSleeping()
             binding.webView.initWebView()
             setCashSettings()
 
@@ -148,7 +139,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
     private fun startConnect() {
         service = Intent(this, ShellService::class.java)
-        hostIP = Utils.getIpAddress(this)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(service)
@@ -166,7 +156,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             if (connection != null) {
                 binder!!.removeListener(connection, this)
             }
-            connection = connectOrLookupConnection(hostIP)
+            connection = hostIP?.let { connectOrLookupConnection(it) }
         }
     }
 
@@ -176,7 +166,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             if (connection != null) {
                 binder?.removeListener(connection, this@MainActivity)
             }
-            connection = connectOrLookupConnection(hostIP)
+            connection = hostIP?.let { connectOrLookupConnection(it) }
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -246,7 +236,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         if (event?.keyCode == KeyEvent.KEYCODE_DPAD_UP && event.action == KeyEvent.ACTION_UP) {
             // Handle trackpad button click event
             // Replace this with your desired action
-                showHandMadeStartAppDialog()
+            showHandMadeStartAppDialog()
             return true
         }
 
@@ -283,12 +273,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         webViewClient = WebViewClient()
         setInitialScale(100)
         activateJS(this)
-
-        Log.d(TAG, "webview user agent ${settings.userAgentString}")
-    }
-
-    private fun preventFromSleeping() {
-        wakeLock.acquire(10 * 60 * 1000L /*10 minutes*/)
     }
 
     private fun showHandMadeStartAppDialog() {
@@ -299,7 +283,10 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         dialog.setContentView(dialogBinding.root)
 
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialogBinding.tvIpAddress.text = "IP: $hostIP"
+        hostIP?.let {
+            dialogBinding.tvIpAddress.text = "IP: $it"
+        }
+
         dialogBinding.run {
 
             btConnect.requestFocus()
@@ -321,10 +308,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             }
 
             btConnect.setOnClickListener {
-//                if (isConnecting) {
-//                    isConnecting = false
-                    connection?.queueCommand(currentCommand)
-//                }
+                connection?.queueCommand(currentCommand)
             }
         }
 
@@ -333,7 +317,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         tryToParseCode(TEST_URL)
     }
 
-      override fun consoleUpdated(devConn: DeviceConnection?, console: ConsoleBuffer?) {
+    override fun consoleUpdated(devConn: DeviceConnection?, console: ConsoleBuffer?) {
         runOnUiThread { /* We won't need an update again after this */
             /* Redraw the terminal */        console?.updateTextView(object : CommandSuccess {
                 override fun onSuccess() {
@@ -544,8 +528,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
     @RequiresApi(Build.VERSION_CODES.S)
     override fun onDestroy() {
-        /* Save the command history first */
-        wakeLock.release()
 
         if (binder != null && connection != null) {
             /* Tell the service about our impending doom */
