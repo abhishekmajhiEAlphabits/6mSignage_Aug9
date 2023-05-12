@@ -78,13 +78,14 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             _binding = ActivityMainBinding.inflate(layoutInflater)
             setContentView(binding.root)
 
+            setCacheSettings()
+
             if (AppPreference(this).isAppDefaultLauncher()) {
                 currentCommand = unConnectCommand
                 connectStatusStr = "Disconnect"
             } else {
                 currentCommand = connectCommand
                 connectStatusStr = "Connect"
-                showHandMadeStartAppDialog()
             }
 
             connectButton?.text = connectStatusStr
@@ -92,15 +93,9 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             loadAdbCrypto()
 
             hostIP = Utils.getIpAddress(this)
-
             Handler().postDelayed({
                 initConnection()
-            }, 1500)
-
-            binding.webView.initWebView()
-            setCashSettings()
-
-            binding.webView.loadUrl(sharedPref.getString(LAST_WEB_URL, URL)!!)
+            }, 1000)
 
         } catch (e: Exception) {
             AlertDialog.Builder(this)
@@ -217,12 +212,16 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private fun setCashSettings() {
-        binding.webView.settings.allowFileAccess = true
+    private fun setCacheSettings() {
+        binding.webView.settings.javaScriptEnabled = true
+        binding.webView.settings.domStorageEnabled = true
         binding.webView.settings.cacheMode = WebSettings.LOAD_DEFAULT
 
         if (!isNetworkAvailable())  //offline
             binding.webView.settings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+
+//        Toast.makeText(this@MainActivity,"Url from CacheSettings method $URL",Toast.LENGTH_LONG).show()
+        binding.webView.loadUrl(sharedPref.getString(LAST_WEB_URL, URL)!!)
     }
 
     private fun isNetworkAvailable(): Boolean {
@@ -245,9 +244,9 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
     override fun onStart() {
         super.onStart()
-        lifecycleScope.launch {
-            loadCodesState.collect { handleLoadCodesState(it) }
-        }
+//        lifecycleScope.launch {
+//            loadCodesState.collect { handleLoadCodesState(it) }
+//        }
     }
 
     // handle state for load codes and show play mode dialog
@@ -289,26 +288,42 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
         dialogBinding.run {
 
-            btConnect.requestFocus()
-            connectButton = btConnect
+        dialogBinding.btConnect.requestFocus()
+            connectButton = dialogBinding.btConnect
             connectButton?.text = connectStatusStr
 
-            btPlay.setOnClickListener {
+        dialogBinding.btPlay.setOnClickListener {
                 dialog.dismiss()
-                sharedPref.edit().putString(LAST_WEB_URL, "$URL/1").apply()
-                binding.webView.loadUrl("$URL/1")
-            }
+                sharedPref.edit().putString(LAST_WEB_URL, "$URL").apply()
+                binding.webView.loadUrl("$URL")
+//            Toast.makeText(this@MainActivity,"Url from dialogBinding.btPlay $$URL/1",Toast.LENGTH_LONG).show()
 
-            btPlayMode.setOnClickListener {
+        }
+
+        dialogBinding.btPlayMode.setOnClickListener {
                 loadCodesState.value = loadCodesState.value.copy(showDialog = true)
             }
 
-            btResetSettings.setOnClickListener {
+        dialogBinding.btResetSettings.setOnClickListener {
                 showResetSettingsDialog()
             }
 
-            btConnect.setOnClickListener {
-                connection?.queueCommand(currentCommand)
+        dialogBinding.btConnect.setOnClickListener {
+                if (isNetworkAvailable()) {
+                    if(connection?.isClosed() == true){
+                        startConnect()
+                    }
+
+                    connection?.queueCommand(currentCommand)
+                } else {
+                    AlertDialog.Builder(this@MainActivity)
+                        .setMessage("You have to enable the network connection first")
+                        .setPositiveButton("Settings") { _, _ ->
+                            startActivity(Intent(Settings.ACTION_SETTINGS))
+                        }
+                        .setNegativeButton("close", null)
+                        .show()
+                }
             }
         }
 
@@ -340,7 +355,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     private fun showPlayModeDialog() {
 
         val dialogBinding = PlayModeDialogBinding.inflate(layoutInflater)
-
         val choice = loadPlayModePreferences(getPreferences(Context.MODE_PRIVATE))
 
         playModeDialog = Dialog(this).apply {
@@ -352,7 +366,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         }
 
         dialogBinding.run {
-
             when (choice) {
                 PlayModeDialogChoice.REAL -> {
                     realButton.requestFocus()
@@ -370,6 +383,8 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 )
                 sharedPref.edit().putString(LAST_WEB_URL, URL).apply()
                 binding.webView.loadUrl(URL)
+//                Toast.makeText(this@MainActivity,"Url from dialogBinding.realButton $$URL",Toast.LENGTH_LONG).show()
+
                 dialogMain?.dismiss()
             }
 
@@ -381,10 +396,10 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 )
                 sharedPref.edit().putString(LAST_WEB_URL, TEST_URL).apply()
                 binding.webView.loadUrl(TEST_URL)
+//                Toast.makeText(this@MainActivity,"Url from dialogBinding.testButton $$TEST_URL",Toast.LENGTH_LONG).show()
                 dialogMain?.dismiss()
             }
         }
-
         playModeDialog?.show()
     }
 
@@ -413,6 +428,8 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         numberOfAttempts = 0
         with(backgroundWebView) {
             loadUrl(url)
+//            Toast.makeText(this@MainActivity,"Url from tryToParseCode fun $$url",Toast.LENGTH_LONG).show()
+
             if (url == URL) {
                 val realCode = sharedPref.getString(REAL_SCREEN_CODE, null)
                 if (realCode.isNullOrEmpty()) tryToGetRealCodeWithDelay()
@@ -578,14 +595,17 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         connectWaiting?.dismiss()
         connectWaiting = null
 
-        ConfirmDialog.displayDialog(this, "Connection Failed", e!!.message, true)
+      ConfirmDialog.displayDialog(this, "Connection Failed", e!!.message, true)
     }
 
     override fun notifyStreamFailed(devConn: DeviceConnection?, e: Exception?) {
-        ConfirmDialog.displayDialog(this, "Connection Terminated", e!!.message, true)
+        Log.v("notifyStreamFailed",e?.localizedMessage?:"")
+         ConfirmDialog.displayDialog(this, "Connection Terminated", e!!.message, true)
     }
 
     override fun notifyStreamClosed(devConn: DeviceConnection?) {
+        Log.v("notifyStreamClosed","notifyStreamClosed")
+
         ConfirmDialog.displayDialog(
             this,
             "Connection Closed",
