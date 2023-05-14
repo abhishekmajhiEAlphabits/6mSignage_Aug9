@@ -3,8 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:background="@drawable/border">
+    android:background="@color/dialog_primary"
+    android:fitsSystemWindows="true">
 
     <TextView
         android:id="@+id/tv_ip_address"
@@ -35,32 +35,103 @@
         android:orientation="vertical"
         app:layout_constraintGuide_percent=".75" />
 
-    <Button
+    <LinearLayout
         android:id="@+id/bt_reset_settings"
         style="@style/Theme_Action_Buttons"
-        android:text="@string/reset_all_settings"
+        android:layout_marginStart="@dimen/default_margin"
+        android:layout_marginTop="@dimen/dialog_top_margin"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:layout_marginBottom="@dimen/dialog_top_margin"
+        android:background="@drawable/button"
+        android:focusableInTouchMode="false"
+        android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/gl_v1"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <Button
+        <ImageView
+            android:layout_width="@dimen/button_icon_size"
+            android:layout_height="@dimen/button_icon_size"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/margin_button"
+            android:src="@drawable/reset_settings_svgrepo_com" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/margin_button"
+            android:text="@string/reset_all_settings"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/bt_play_mode"
-        android:text="@string/play_mode"
         style="@style/Theme_Action_Buttons"
+        android:layout_marginStart="@dimen/default_margin"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:background="@drawable/button"
+        android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/gl_v2"
         app:layout_constraintStart_toEndOf="@id/gl_v1"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
 
-    <Button
+        <ImageView
+            android:layout_width="@dimen/button_icon_size"
+            android:layout_height="@dimen/button_icon_size"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/margin_button"
+            android:src="@drawable/playmode_shuffle_svgrepo_com" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/margin_button"
+            android:text="@string/play_mode"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
         android:id="@+id/bt_play"
         style="@style/Theme_Action_Buttons"
+        android:layout_marginStart="@dimen/default_margin"
+        android:layout_marginTop="@dimen/default_margin"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:layout_marginBottom="@dimen/default_margin"
+        android:background="@drawable/button"
+        android:orientation="vertical"
         android:text="@string/play"
+        android:textColor="@color/text_primary"
+        android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/gl_v3"
         app:layout_constraintStart_toEndOf="@id/gl_v2"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="@dimen/button_icon_size"
+            android:layout_height="@dimen/button_icon_size"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/margin_button"
+            android:src="@drawable/play_1003_svgrepo_com" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/margin_button"
+            android:text="@string/play"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp" />
+
+    </LinearLayout>
 
     <Button
         android:id="@+id/bt_connect"

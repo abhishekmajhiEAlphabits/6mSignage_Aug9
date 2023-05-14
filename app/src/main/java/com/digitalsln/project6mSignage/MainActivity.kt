@@ -21,6 +21,7 @@ import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
 import android.view.KeyEvent
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.WebSettings
@@ -32,9 +33,9 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
-import androidx.lifecycle.lifecycleScope
 import com.cgutman.adblib.AdbCrypto
 import com.digitalsln.project6mSignage.databinding.ActivityMainBinding
+import com.digitalsln.project6mSignage.databinding.DialogResetSettingsBinding
 import com.digitalsln.project6mSignage.databinding.HandMadeStartAppDialogBinding
 import com.digitalsln.project6mSignage.databinding.PlayModeDialogBinding
 import com.digitalsln.project6mSignage.tvLauncher.dialogs.ConfirmDialog
@@ -47,8 +48,6 @@ import com.digitalsln.project6mSignage.tvLauncher.utilities.DeviceConnectionList
 import com.digitalsln.project6mSignage.tvLauncher.utilities.ShellService
 import com.digitalsln.project6mSignage.tvLauncher.utilities.Utils
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
@@ -288,29 +287,29 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
         dialogBinding.run {
 
-        dialogBinding.btConnect.requestFocus()
+            dialogBinding.btConnect.requestFocus()
             connectButton = dialogBinding.btConnect
             connectButton?.text = connectStatusStr
 
-        dialogBinding.btPlay.setOnClickListener {
+            dialogBinding.btPlay.setOnClickListener {
                 dialog.dismiss()
                 sharedPref.edit().putString(LAST_WEB_URL, "$URL").apply()
                 binding.webView.loadUrl("$URL")
 //            Toast.makeText(this@MainActivity,"Url from dialogBinding.btPlay $$URL/1",Toast.LENGTH_LONG).show()
 
-        }
+            }
 
-        dialogBinding.btPlayMode.setOnClickListener {
+            dialogBinding.btPlayMode.setOnClickListener {
                 loadCodesState.value = loadCodesState.value.copy(showDialog = true)
             }
 
-        dialogBinding.btResetSettings.setOnClickListener {
+            dialogBinding.btResetSettings.setOnClickListener {
                 showResetSettingsDialog()
             }
 
-        dialogBinding.btConnect.setOnClickListener {
+            dialogBinding.btConnect.setOnClickListener {
                 if (isNetworkAvailable()) {
-                    if(connection?.isClosed() == true){
+                    if (connection?.isClosed() == true) {
                         startConnect()
                     }
 
@@ -352,6 +351,27 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         }
     }
 
+    private fun testShowPlayModeDialog() {
+        val dialogBinding = PlayModeDialogBinding.inflate(layoutInflater)
+
+        val dialog = Dialog(this)
+        dialogMain = dialog
+        dialog.setContentView(dialogBinding.root)
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        dialogBinding.run {
+            title.visibility = View.VISIBLE
+            realCode.visibility = View.VISIBLE
+            realButton.visibility = View.VISIBLE
+            testButton.visibility = View.VISIBLE
+            testCode.visibility = View.VISIBLE
+            loader.visibility = View.GONE
+        }
+
+        dialog.show()
+    }
+
     private fun showPlayModeDialog() {
 
         val dialogBinding = PlayModeDialogBinding.inflate(layoutInflater)
@@ -370,6 +390,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 PlayModeDialogChoice.REAL -> {
                     realButton.requestFocus()
                 }
+
                 PlayModeDialogChoice.TEST -> {
                     testButton.requestFocus()
                 }
@@ -493,16 +514,29 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     }
 
     private fun showResetSettingsDialog() {
-        AlertDialog.Builder(this)
-            .setMessage(R.string.dialog_exit_do_you_want_to_close_app)
-            .setPositiveButton(R.string.dialog_exit_yes) { _, _ ->
+        val dialogBinding = DialogResetSettingsBinding.inflate(layoutInflater)
+
+        val dialog = Dialog(this)
+        dialogMain = dialog
+        dialog.setContentView(dialogBinding.root)
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        dialogBinding.run {
+            yesBtn.requestFocus()
+
+            yesBtn.setOnClickListener {
                 resetAllSettings()
-                //restartApp()
-            }.setNegativeButton(R.string.dialog_exit_no) { _, _ ->
-                showHandMadeStartAppDialog()
+                dialog.dismiss()
             }
-            .create()
-            .show()
+
+            noBtn.setOnClickListener {
+                showHandMadeStartAppDialog()
+                dialog.dismiss()
+            }
+        }
+
+        dialog.show()
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -595,16 +629,16 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         connectWaiting?.dismiss()
         connectWaiting = null
 
-      ConfirmDialog.displayDialog(this, "Connection Failed", e!!.message, true)
+        ConfirmDialog.displayDialog(this, "Connection Failed", e!!.message, true)
     }
 
     override fun notifyStreamFailed(devConn: DeviceConnection?, e: Exception?) {
-        Log.v("notifyStreamFailed",e?.localizedMessage?:"")
-         ConfirmDialog.displayDialog(this, "Connection Terminated", e!!.message, true)
+        Log.v("notifyStreamFailed", e?.localizedMessage ?: "")
+        ConfirmDialog.displayDialog(this, "Connection Terminated", e!!.message, true)
     }
 
     override fun notifyStreamClosed(devConn: DeviceConnection?) {
-        Log.v("notifyStreamClosed","notifyStreamClosed")
+        Log.v("notifyStreamClosed", "notifyStreamClosed")
 
         ConfirmDialog.displayDialog(
             this,
