@@ -15,7 +15,7 @@ class AppPreference(context: Context) {
 
     init {
         if (sharedPreference == null)
-            sharedPreference = context.getSharedPreferences(PREF_NAME,MODE_PRIVATE)
+            sharedPreference = context.getSharedPreferences(PREF_NAME, MODE_PRIVATE)
     }
 
     fun isAppDefaultLauncher(): Boolean {
@@ -27,4 +27,14 @@ class AppPreference(context: Context) {
         if (sharedPreference == null) return
         sharedPreference!!.edit().putBoolean(DEFAULT_LAUNCHER, flag).apply()
     }
+
+    fun saveKeyValue(value: String, key: String) {
+        if (sharedPreference == null) return
+        sharedPreference!!.edit().putString(key, value).apply()
+    }
+
+    fun retrieveValueByKey(key: String,default:String): String {
+        return sharedPreference?.getString(key, default)!!
+    }
+
 }

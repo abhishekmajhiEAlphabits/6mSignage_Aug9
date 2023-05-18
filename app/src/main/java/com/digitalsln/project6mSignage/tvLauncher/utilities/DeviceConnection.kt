@@ -13,12 +13,25 @@ import java.net.InetSocketAddress
 import java.net.Socket
 import java.util.concurrent.LinkedBlockingQueue
 
-class DeviceConnection(
-    private val listener: DeviceConnectionListener?,
-    private val host: String?,
-    private val port: Int,
+class DeviceConnection private constructor() : Closeable {
+    private var listener: DeviceConnectionListener? = null
+    private var  host: String? = null
+    private var port: Int = 5555
     private var foreground: Boolean = true
-) : Closeable {
+    companion object :
+        SingletonHolder<DeviceConnection>(::DeviceConnection)
+
+    fun setUp(
+        listener: DeviceConnectionListener?,
+        host: String?, port: Int,
+        foreground: Boolean = true
+    ):DeviceConnection {
+       this.listener = listener
+        this.host = host
+        this.port = port
+        this.foreground = foreground
+        return this
+    }
 
     private val CONN_TIMEOUT = 5000
 
@@ -62,7 +75,7 @@ class DeviceConnection(
             val crypto: AdbCrypto? =
                 listener?.loadAdbCrypto(this@DeviceConnection)
 
-            if(crypto==null) startConnect()
+            if (crypto == null) startConnect()
 
             try {
                 /* Establish a connect to the remote host */
@@ -129,16 +142,16 @@ class DeviceConnection(
         try {
             while (true) {
 
-            /* Get the next command */
-            val command: ByteArray = commandQueue.take()
+                /* Get the next command */
+                val command: ByteArray = commandQueue.take()
 
-            /* This may be a close indication */if (shellStream?.isClosed == true) {
-                listener!!.notifyStreamClosed(this@DeviceConnection)
-                return
-            }
+                /* This may be a close indication */if (shellStream?.isClosed == true) {
+                    listener!!.notifyStreamClosed(this@DeviceConnection)
+                    return
+                }
 
 
-            /* Issue it to the device */shellStream!!.write(command)
+                /* Issue it to the device */shellStream!!.write(command)
             }
         } catch (e: IOException) {
             listener!!.notifyStreamFailed(this@DeviceConnection, e)
@@ -149,7 +162,7 @@ class DeviceConnection(
     }
 
     private fun startReceiveThread() {
-        if(shellStream==null ) return
+        if (shellStream == null) return
         Thread {
             try {
                 while (!shellStream!!.isClosed) {

@@ -17,6 +17,7 @@ import androidx.annotation.RequiresApi
 import com.cgutman.adblib.AdbCrypto
 import com.digitalsln.project6mSignage.R
 import com.digitalsln.project6mSignage.MainActivity
+import com.digitalsln.project6mSignage.tvLauncher.utilities.DeviceConnection.Companion.getInstance
 
 class ShellService : Service(), DeviceConnectionListener {
 
@@ -38,7 +39,7 @@ class ShellService : Service(), DeviceConnectionListener {
 
     inner class ShellServiceBinder : Binder() {
         fun createConnection(host: String?, port: Int): DeviceConnection {
-            val conn = DeviceConnection(listener, host, port)
+            val conn = DeviceConnection.getInstance().setUp(listener,host,port)
             listener.addListener(conn, this@ShellService)
             return conn
         }

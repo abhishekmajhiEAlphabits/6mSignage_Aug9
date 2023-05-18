@@ -32,9 +32,9 @@ class ConsoleBuffer(bufferSize: Int) {
     @Synchronized
     fun updateTextView(listener: MainActivity.CommandSuccess) {
         if (String(buffer).contains("Package com.google.android.tvlauncher new state: disabled-user")) {
-            listener.onSuccess()
+            listener.onSuccess(MainActivity.ConnectionType.CONNECTED)
         }else if(String(buffer).contains("enable")){
-            listener.onHomePressed()
+            listener.onSuccess(MainActivity.ConnectionType.DIS_CONNECTED)
         }
     }
 }
