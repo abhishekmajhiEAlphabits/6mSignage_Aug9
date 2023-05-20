@@ -34,5 +34,12 @@
     <string name="play_mode_dialog_test">Test</string>
     <string name="play_mode_dialog_play_mode">Play mode</string>
     <!--    Play mode dialog-->
+    <string name="connect_lbl">Connect</string>
+    <!--    Play mode dialog-->
+
+    <string name="no">No</string>
+    <string name="yes">Yes</string>
+    <string name="make_app_default">Make App Default</string>
+    <string name="open_tv_settings">Open TV Settings</string>
 
 </resources>

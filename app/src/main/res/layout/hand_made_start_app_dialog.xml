@@ -1,61 +1,171 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/border">
+    android:background="@color/dialog_primary"
+    android:fitsSystemWindows="true">
 
-    <Button
-        android:id="@+id/reset_all_settings_button"
-        android:layout_width="200dp"
-        android:layout_height="120dp"
+    <TextView
+        android:id="@+id/tv_ip_address"
+        style="@style/Theme_Title_TextView"
+        android:layout_marginTop="15dp"
+        app:layout_constraintBottom_toTopOf="@id/bt_play"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/gl_v1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent=".37" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/gl_v2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent=".63" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/gl_v3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent=".50" />
+
+    <LinearLayout
+        android:id="@+id/bt_play"
+        style="@style/Theme_Action_Buttons"
         android:layout_marginStart="@dimen/default_margin"
         android:layout_marginTop="@dimen/dialog_top_margin"
         android:layout_marginEnd="@dimen/default_margin"
         android:layout_marginBottom="@dimen/dialog_top_margin"
-        android:background="@drawable/button"
-        android:focusableInTouchMode="false"
-        android:text="@string/reset_all_settings"
-        android:textColor="@color/text_primary"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/play_mode_button"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/bt_make_app_default"
+        app:layout_constraintEnd_toStartOf="@id/gl_v1"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="@dimen/button_icon_size"
+            android:layout_height="@dimen/button_icon_size"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/margin_button"
+            android:src="@drawable/play_1003_svgrepo_com" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/margin_button"
+            android:text="@string/play"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp" />
+
+    </LinearLayout>
 
     <Button
-        android:id="@+id/play_mode_button"
-        android:layout_width="200dp"
-        android:layout_height="120dp"
+        android:id="@+id/bt_make_app_default"
+        style="@style/Theme_Action_Buttons"
+        android:layout_marginStart="@dimen/default_margin"
+        android:layout_marginTop="@dimen/default_margin"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:background="@drawable/button"
+        android:text="@string/make_app_default"
+        app:layout_constraintEnd_toStartOf="@id/gl_v3"
+        app:layout_constraintTop_toBottomOf="@+id/bt_play" />
+
+    <LinearLayout
+        android:id="@+id/bt_play_mode"
+        style="@style/Theme_Action_Buttons"
         android:layout_marginStart="@dimen/default_margin"
         android:layout_marginEnd="@dimen/default_margin"
         android:background="@drawable/button"
-        android:text="@string/play_mode"
-        android:textColor="@color/text_primary"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/play_button"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/reset_all_settings_button"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="@id/bt_play"
+        app:layout_constraintEnd_toStartOf="@id/gl_v2"
+        app:layout_constraintStart_toEndOf="@id/gl_v1"
+        app:layout_constraintTop_toTopOf="@id/bt_play">
 
-    <Button
-        android:id="@+id/play_button"
-        android:layout_width="200dp"
-        android:layout_height="120dp"
+        <ImageView
+            android:layout_width="@dimen/button_icon_size"
+            android:layout_height="@dimen/button_icon_size"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/margin_button"
+            android:src="@drawable/playmode_shuffle_svgrepo_com" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/margin_button"
+            android:text="@string/play_mode"
+            android:textColor="@color/text_primary"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/bt_open_tv_settings"
+        style="@style/Theme_Action_Buttons"
+        android:layout_marginStart="@dimen/default_margin"
+        android:layout_marginTop="@dimen/dialog_top_margin"
+        android:layout_marginEnd="@dimen/default_margin"
+        android:layout_marginBottom="@dimen/dialog_top_margin"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="@id/bt_make_app_default"
+        app:layout_constraintStart_toEndOf="@id/gl_v3"
+        app:layout_constraintTop_toTopOf="@id/bt_make_app_default">
+
+        <ImageView
+            android:layout_width="@dimen/button_icon_size"
+            android:layout_height="@dimen/button_icon_size"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/margin_button"
+            android:src="@drawable/tvsettings" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/margin_button"
+            android:text="@string/open_tv_settings"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/bt_reset_settings"
+        style="@style/Theme_Action_Buttons"
         android:layout_marginStart="@dimen/default_margin"
         android:layout_marginTop="@dimen/default_margin"
         android:layout_marginEnd="@dimen/default_margin"
         android:layout_marginBottom="@dimen/default_margin"
-        android:background="@drawable/button"
-        android:text="@string/play"
-        android:textColor="@color/text_primary"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintStart_toEndOf="@+id/play_mode_button"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="@id/bt_play"
+        app:layout_constraintStart_toEndOf="@id/gl_v2"
+        app:layout_constraintTop_toTopOf="@id/bt_play">
+
+        <ImageView
+            android:layout_width="@dimen/button_icon_size"
+            android:layout_height="@dimen/button_icon_size"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/margin_button"
+            android:src="@drawable/reset_settings_svgrepo_com" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/margin_button"
+            android:text="@string/reset_all_settings"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
