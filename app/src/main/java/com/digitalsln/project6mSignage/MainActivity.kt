@@ -67,6 +67,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 .setNegativeButton("close", null)
                 .show()
         }
+        showHandMadeStartAppDialog()
     }
 
     private fun startConnecting() {
@@ -233,14 +234,18 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 showResetSettingsDialog()
             }
 
-            btConnect.requestFocus()
-            btConnect.text = currentButtonLbl
-            btConnect.setOnClickListener {
+            btMakeAppDefault.requestFocus()
+            //btMakeAppDefault.text = currentButtonLbl
+            btMakeAppDefault.setOnClickListener {
                 if (connection == null || connection?.isClosed() == true) {
                     initConnectButtonAction()
                 } else {
                     connection?.startConnect()
                 }
+            }
+
+            btOpenTvSettings.setOnClickListener {
+                initConnectButtonAction()
             }
         }
     }
@@ -295,7 +300,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                             currentButtonLbl = ConnectionType.CONNECTED.value
                         }
                     }
-                    dialogBinding.btConnect.text = currentButtonLbl
+                    //dialogBinding.btMakeAppDefault.text = currentButtonLbl
 
                 }
             })

@@ -39,5 +39,7 @@
 
     <string name="no">No</string>
     <string name="yes">Yes</string>
+    <string name="make_app_default">Make App Default</string>
+    <string name="open_tv_settings">Open TV Settings</string>
 
 </resources>
