@@ -245,7 +245,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             }
 
             btOpenTvSettings.setOnClickListener {
-                initConnectButtonAction()
+                startActivity(Intent(Settings.ACTION_SETTINGS))
             }
         }
     }
@@ -358,6 +358,10 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             .setMessage(R.string.dialog_exit_do_you_want_to_close_app)
             .setPositiveButton(R.string.dialog_exit_yes) { _, _ ->
                 resetAllSettings()
+                //btPlay.callOnClick()
+                dialog.dismiss()
+                AppPreference(this@MainActivity).saveKeyValue(LAST_WEB_URL, REAL_URL)
+                binding.webView.loadUrl(REAL_URL)
                 //restartApp()
             }.setNegativeButton(R.string.dialog_exit_no) { _, _ ->
                 showHandMadeStartAppDialog()
