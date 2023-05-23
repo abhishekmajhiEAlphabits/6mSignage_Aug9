@@ -1,17 +1,21 @@
 package com.digitalsln.project6mSignage
 
 import android.annotation.SuppressLint
+import android.app.AlarmManager
 import android.app.AlertDialog
 import android.app.Dialog
+import android.app.PendingIntent
 import android.content.*
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import android.view.KeyEvent
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.WebSettings
@@ -28,6 +32,7 @@ import com.digitalsln.project6mSignage.tvLauncher.dialogs.ConfirmDialog
 import com.digitalsln.project6mSignage.tvLauncher.dialogs.SpinnerDialog
 import com.digitalsln.project6mSignage.tvLauncher.utilities.*
 import com.digitalsln.project6mSignage.tvLauncher.utilities.Utils.isNetworkAvailable
+import java.util.*
 
 class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
@@ -43,7 +48,12 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     var currentCommand = connectCommand
     var currentButtonLbl: String = ConnectionType.CONNECTED.value
     private val binding get() = _binding!!
+    private var isTimerSet = false
+    private var defaultValue: String? = null
+    private lateinit var wakeLock: PowerManager.WakeLock
+    private lateinit var powerManager: PowerManager;
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -67,7 +77,82 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 .setNegativeButton("close", null)
                 .show()
         }
+
+        try {
+            checkOverlayPermission();
+            checkWritePermission()
+
+            defaultValue =
+                Settings.System.getString(contentResolver, Settings.System.SCREEN_OFF_TIMEOUT)
+
+            powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+            wakeLock = powerManager.newWakeLock(
+                PowerManager.FULL_WAKE_LOCK or
+                        PowerManager.ACQUIRE_CAUSES_WAKEUP or
+                        PowerManager.ON_AFTER_RELEASE, "appname::WakeLock"
+            )
+
+            wakeLock.acquire()
+
+        } catch (e: Exception) {
+            Toast.makeText(
+                this,
+                "Permissions not granted",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
         showHandMadeStartAppDialog()
+    }
+
+    /* To ask user to grant the Overlay permission
+     */
+    private fun checkOverlayPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!Settings.canDrawOverlays(this)) {
+                // send user to the device settings
+                val myIntent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION)
+                startActivity(myIntent)
+            }
+        }
+    }
+
+    /* To ask user to grant the Write System Settings permission
+    */
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun checkWritePermission() {
+        if (!Settings.System.canWrite(this)) {
+            // send user to the device settings
+            val myIntent = Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS)
+            startActivity(myIntent)
+        }
+
+    }
+
+    @SuppressLint("InvalidWakeLockTag", "ShortAlarm")
+    fun lockTV(timerValue: Int) {
+        try {
+            if (wakeLock.isHeld) {
+                wakeLock.release()
+            }
+            isTimerSet = true
+
+            val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val i = Intent(applicationContext, DisplayOverlayReceiver::class.java)
+            i.action = "com.example.androidtvdemo.START_ALARM"
+            val pi = PendingIntent.getBroadcast(applicationContext, 0, i, 0);
+
+            val futureDate: Calendar = Calendar.getInstance()
+            futureDate.add(Calendar.SECOND, timerValue)  //timerValue - the user selected timerValue
+
+            am.setExact(AlarmManager.RTC_WAKEUP, futureDate.getTime().getTime(), pi);
+        } catch (e: Exception) {
+            Toast.makeText(
+                this,
+                "Permissions not granted",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
     private fun startConnecting() {
@@ -369,6 +454,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             .create()
             .show()
     }
+
     private fun resetAllSettings() {
         WebStorage.getInstance().deleteAllData()
         binding.webView.run {
@@ -404,6 +490,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         super.onDestroy()
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onResume() {
         /* Tell the service about our UI state change */
         hostIP = Utils.getIpAddress(this)
@@ -414,14 +501,61 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             binder!!.notifyResumingActivity(connection!!)
         }
         super.onResume()
+
+        try {
+            checkOverlayPermission();
+            checkWritePermission()
+
+            if (isTimerSet) {
+                Log.d(TAG, "Timer set..onResume")
+                if (!wakeLock.isHeld) {
+                    wakeLock.acquire()
+                    Log.d(TAG, "Timer set..onResume..wakelock acquire")
+                }
+            } else {
+                Settings.System.putString(
+                    contentResolver,
+                    Settings.System.SCREEN_OFF_TIMEOUT,
+                    defaultValue
+                )
+            }
+        } catch (e: Exception) {
+            Toast.makeText(
+                this,
+                "Permissions not granted",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onPause() {
         /* Tell the service about our UI state change */
         if (binder != null) {
             binder!!.notifyPausingActivity(connection!!)
         }
         super.onPause()
+
+        try {
+            checkOverlayPermission();
+            checkWritePermission()
+
+            if (isTimerSet) {
+                Log.d(TAG, "Timer set..onPause")
+            } else {
+                Settings.System.putString(
+                    contentResolver,
+                    Settings.System.SCREEN_OFF_TIMEOUT,
+                    defaultValue
+                )
+            }
+        } catch (e: Exception) {
+            Toast.makeText(
+                this,
+                "Permissions not granted",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
     override fun notifyStreamClosed(devConn: DeviceConnection?) {

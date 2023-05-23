@@ -7,6 +7,15 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission
+        android:name="android.permission.DEVICE_POWER"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission
+        android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
 
     <uses-permission
         android:name="android.permission.ACCESS_WIFI_STATE"
@@ -47,6 +56,12 @@
         </activity>
 
         <service android:name=".tvLauncher.utilities.ShellService" />
+        <service android:name=".ForegroundService"/>
+
+        <receiver android:name=".DisplayOverlayReceiver" />
+        <receiver android:name=".ShutDownReceiver" />
+        <receiver android:name=".TimeOutReceiver" />
+        <receiver android:name=".WakeUpReceiver" />
 
     </application>
 </manifest>
