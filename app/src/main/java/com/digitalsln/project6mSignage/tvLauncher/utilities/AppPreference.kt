@@ -33,7 +33,34 @@ class AppPreference(context: Context) {
         sharedPreference!!.edit().putString(key, value).apply()
     }
 
-    fun retrieveValueByKey(key: String,default:String): String {
+    fun retrieveValueByKey(key: String, default: String): String {
+        return sharedPreference?.getString(key, default)!!
+    }
+
+    fun savePlaylistCode(value: String, key: String) {
+        if (sharedPreference == null) return
+        sharedPreference!!.edit().putString(key, value).apply()
+    }
+
+    fun retrievePlaylistCode(key: String, default: String): String {
+        return sharedPreference?.getString(key, default)!!
+    }
+
+    fun saveFromTime(value: String, key: String) {
+        if (sharedPreference == null) return
+        sharedPreference!!.edit().putString(key, value).apply()
+    }
+
+    fun retrieveFromTime(key: String, default: String): String {
+        return sharedPreference?.getString(key, default)!!
+    }
+
+    fun saveToTime(value: String, key: String) {
+        if (sharedPreference == null) return
+        sharedPreference!!.edit().putString(key, value).apply()
+    }
+
+    fun retrieveToTime(key: String, default: String): String {
         return sharedPreference?.getString(key, default)!!
     }
 

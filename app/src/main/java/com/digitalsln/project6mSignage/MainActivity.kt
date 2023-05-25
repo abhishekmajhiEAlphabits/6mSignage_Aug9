@@ -15,7 +15,6 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import android.view.KeyEvent
-import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.WebSettings
@@ -28,10 +27,16 @@ import com.cgutman.adblib.AdbCrypto
 import com.digitalsln.project6mSignage.databinding.ActivityMainBinding
 import com.digitalsln.project6mSignage.databinding.HandMadeStartAppDialogBinding
 import com.digitalsln.project6mSignage.databinding.PlayModeDialogBinding
+import com.digitalsln.project6mSignage.model.TimeData
+import com.digitalsln.project6mSignage.network.ApiClient
+import com.digitalsln.project6mSignage.network.ApiInterface
 import com.digitalsln.project6mSignage.tvLauncher.dialogs.ConfirmDialog
 import com.digitalsln.project6mSignage.tvLauncher.dialogs.SpinnerDialog
 import com.digitalsln.project6mSignage.tvLauncher.utilities.*
 import com.digitalsln.project6mSignage.tvLauncher.utilities.Utils.isNetworkAvailable
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.util.*
 
 class MainActivity : AppCompatActivity(), DeviceConnectionListener {
@@ -93,6 +98,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             )
 
             wakeLock.acquire()
+            callApi()
 
         } catch (e: Exception) {
             Toast.makeText(
@@ -153,6 +159,60 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 Toast.LENGTH_SHORT
             ).show()
         }
+    }
+
+    private fun callApi() {
+        ApiClient.client().create(ApiInterface::class.java)
+            .getTime().enqueue(object : Callback<List<TimeData>> {
+                override fun onResponse(
+                    call: Call<List<TimeData>>,
+                    response: Response<List<TimeData>>
+                ) {
+                    if (response.isSuccessful) {
+                        val calendar = Calendar.getInstance()
+                        val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
+                        AppPreference(this@MainActivity).saveFromTime(response.body()!![day].from,"FROM_TIME")
+                        AppPreference(this@MainActivity).saveToTime(response.body()!![day].to,"TO_TIME")
+                        Log.d("abhi", "${response.body()}")
+                        Log.d("abhi", "$day")
+                        Log.d("abhi", "${response.body()!![day].from}")
+                        Log.d("abhi", "${response.body()!![day].to}")
+                    } else {
+                        Log.d("abhi", "Failed")
+                    }
+                }
+
+                override fun onFailure(call: Call<List<TimeData>>, t: Throwable) {
+                    Log.d("abhi", "$t")
+                }
+            })
+    }
+
+    private fun getWeekDay(day: Int): Int {
+        when (day) {
+            0 -> {
+                return 0
+            }
+            1 -> {
+                return 1
+            }
+            2 -> {
+                return 2
+            }
+            3 -> {
+                return 3
+            }
+            4 -> {
+                return 4
+            }
+            5 -> {
+                return 5
+            }
+            6 -> {
+                return 6
+            }
+        }
+        return 0
     }
 
     private fun startConnecting() {
