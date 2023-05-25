@@ -166,6 +166,17 @@
             android:textColor="@color/white"
             android:textSize="14sp" />
 
+
     </LinearLayout>
+
+    <Button
+        android:id="@+id/bt_refresh"
+        style="@style/Theme_Action_Buttons"
+        android:text="Refresh"
+        android:textColor="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

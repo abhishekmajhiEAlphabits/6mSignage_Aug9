@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import android.util.Log
+import com.digitalsln.project6mSignage.tvLauncher.utilities.AppPreference
 import java.util.*
 
 class ShutDownReceiver : BroadcastReceiver() {
@@ -31,6 +32,9 @@ class ShutDownReceiver : BroadcastReceiver() {
 
             am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
 //            Log.d(TAG, "inside wake up alarm manager")
+
+            val toTime = AppPreference(context).retrieveFromTime("TO_TIME","TO_TIME")
+            Log.d("abhi","$toTime")
         } catch (e: Exception) {
             Log.d(TAG, "wake up alarm manager failed")
         }

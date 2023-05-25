@@ -98,7 +98,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             )
 
             wakeLock.acquire()
-            callApi()
 
         } catch (e: Exception) {
             Toast.makeText(
@@ -150,8 +149,11 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
             val futureDate: Calendar = Calendar.getInstance()
             futureDate.add(Calendar.SECOND, timerValue)  //timerValue - the user selected timerValue
+//            futureDate.set(Calendar.HOUR_OF_DAY,14)
+//            futureDate.set(Calendar.MINUTE,58)
+//            futureDate.set(Calendar.SECOND,0)
 
-            am.setExact(AlarmManager.RTC_WAKEUP, futureDate.getTime().getTime(), pi);
+            am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
         } catch (e: Exception) {
             Toast.makeText(
                 this,
@@ -159,6 +161,27 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 Toast.LENGTH_SHORT
             ).show()
         }
+    }
+
+    private fun startScheduler() {
+        callApi()
+        //here give the alarm manager for everyday api hit timer after every 24hrs
+        scheduleApiCallTimer()
+    }
+
+    private fun scheduleApiCallTimer() {
+        val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val i = Intent(applicationContext, ScheduleApiTimerReceiverOne::class.java)
+        i.action = "com.example.androidtvdemo.START_ALARM"
+        val pi = PendingIntent.getBroadcast(applicationContext, 0, i, 0);
+
+        val futureDate: Calendar = Calendar.getInstance()
+        futureDate.add(Calendar.SECOND, 10)
+//        futureDate.set(Calendar.HOUR_OF_DAY, 17)
+//        futureDate.set(Calendar.MINUTE, 58)
+//        futureDate.set(Calendar.SECOND, 0)
+
+        am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
     }
 
     private fun callApi() {
@@ -171,12 +194,19 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                     if (response.isSuccessful) {
                         val calendar = Calendar.getInstance()
                         val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
-                        AppPreference(this@MainActivity).saveFromTime(response.body()!![day].from,"FROM_TIME")
-                        AppPreference(this@MainActivity).saveToTime(response.body()!![day].to,"TO_TIME")
+                        AppPreference(this@MainActivity).saveFromTime(
+                            response.body()!![day].from,
+                            "FROM_TIME"
+                        )
+                        AppPreference(this@MainActivity).saveToTime(
+                            response.body()!![day].to,
+                            "TO_TIME"
+                        )
                         Log.d("abhi", "${response.body()}")
                         Log.d("abhi", "$day")
                         Log.d("abhi", "${response.body()!![day].from}")
                         Log.d("abhi", "${response.body()!![day].to}")
+                        lockTV(10)
                     } else {
                         Log.d("abhi", "Failed")
                     }
@@ -186,6 +216,15 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                     Log.d("abhi", "$t")
                 }
             })
+    }
+
+    private fun cancelAlarms() {
+        val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val i = Intent(applicationContext, DisplayOverlayReceiver::class.java)
+        i.action = "com.example.androidtvdemo.START_ALARM"
+        val pi =
+            PendingIntent.getBroadcast(applicationContext, 0, i, PendingIntent.FLAG_CANCEL_CURRENT);
+        am.cancel(pi)
     }
 
     private fun getWeekDay(day: Int): Int {
@@ -366,6 +405,8 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 dialog.dismiss()
                 AppPreference(this@MainActivity).saveKeyValue(LAST_WEB_URL, REAL_URL)
                 binding.webView.loadUrl(REAL_URL)
+//                lockTV(10)
+                startScheduler()
             }
 
             btPlayMode.setOnClickListener {
@@ -373,6 +414,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                     showPlayModeDialog()
                 }
                 showPlayModeButtons()
+
             }
 
             btResetSettings.setOnClickListener {
@@ -391,6 +433,12 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
             btOpenTvSettings.setOnClickListener {
                 startActivity(Intent(Settings.ACTION_SETTINGS))
+            }
+
+            btRefresh.setOnClickListener {
+//                cancelAlarms()
+                var alarm = CancelAlarm(applicationContext)
+                alarm.cancelAlarms()
             }
         }
     }

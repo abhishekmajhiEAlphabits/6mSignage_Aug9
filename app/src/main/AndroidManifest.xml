@@ -62,6 +62,8 @@
         <receiver android:name=".ShutDownReceiver" />
         <receiver android:name=".TimeOutReceiver" />
         <receiver android:name=".WakeUpReceiver" />
+        <receiver android:name=".ScheduleApiTimerReceiverOne"/>
+        <receiver android:name=".ScheduleApiTimerReceiverTwo"/>
 
     </application>
 </manifest>
