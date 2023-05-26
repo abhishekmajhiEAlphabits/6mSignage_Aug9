@@ -5,5 +5,4 @@ import javax.inject.Singleton
 @Singleton
 class LockTV {
 
-
 }

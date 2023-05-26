@@ -8,6 +8,7 @@ import android.content.Intent
 import android.provider.Settings
 import android.util.Log
 import com.digitalsln.project6mSignage.tvLauncher.utilities.AppPreference
+import java.text.SimpleDateFormat
 import java.util.*
 
 class ShutDownReceiver : BroadcastReceiver() {
@@ -28,13 +29,25 @@ class ShutDownReceiver : BroadcastReceiver() {
             val pi = PendingIntent.getBroadcast(context, 0, i, 0);
 
             val futureDate: Calendar = Calendar.getInstance()
-            futureDate.add(Calendar.SECOND, 20)
+//            futureDate.add(Calendar.SECOND, 20)
+
+            val toTime = AppPreference(context).retrieveToTime("TO_TIME", "TO_TIME")
+
+            val cal = Calendar.getInstance()
+            val sdf = SimpleDateFormat("HH:mm:ss")
+            val date: Date = sdf.parse("19:07:00") //give the toTime here
+            cal.time = date
+
+            Log.d(
+                "abhi",
+                "${cal[Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
+            )
+            futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
+            futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
+            futureDate.set(Calendar.SECOND, cal[Calendar.SECOND])
 
             am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
 //            Log.d(TAG, "inside wake up alarm manager")
-
-            val toTime = AppPreference(context).retrieveFromTime("TO_TIME","TO_TIME")
-            Log.d("abhi","$toTime")
         } catch (e: Exception) {
             Log.d(TAG, "wake up alarm manager failed")
         }
@@ -44,11 +57,25 @@ class ShutDownReceiver : BroadcastReceiver() {
 
             val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val i = Intent(context, TimeOutReceiver::class.java)
-            i.putExtra("timeOutValue", defaultTimeOut)
             val pi = PendingIntent.getBroadcast(context, 0, i, 0);
 
             val futureDate: Calendar = Calendar.getInstance()
-            futureDate.add(Calendar.SECOND, 15)
+//            futureDate.add(Calendar.SECOND, 15)
+
+            val toTime = AppPreference(context).retrieveToTime("TO_TIME", "TO_TIME")
+
+            val cal = Calendar.getInstance()
+            val sdf = SimpleDateFormat("HH:mm:ss")
+            val date: Date = sdf.parse("19:07:00") //give the toTime here
+            cal.time = date
+
+            Log.d(
+                "abhiTO",
+                "${cal[Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
+            )
+            futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
+            futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
+            futureDate.set(Calendar.SECOND, cal[Calendar.SECOND] - 10)
 
             am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
 //            Log.d(TAG, "inside set default timer alarm manager")

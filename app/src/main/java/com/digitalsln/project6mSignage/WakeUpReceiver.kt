@@ -14,7 +14,7 @@ class WakeUpReceiver : BroadcastReceiver() {
     private lateinit var powerManager: PowerManager;
 
     override fun onReceive(context: Context, intent: Intent) {
-
+        Log.d("abhi", "inside wakeup receiver")
 
         powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         wakeLock = powerManager.newWakeLock(

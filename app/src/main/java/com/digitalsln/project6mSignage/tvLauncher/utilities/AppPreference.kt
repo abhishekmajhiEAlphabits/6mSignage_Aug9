@@ -37,12 +37,21 @@ class AppPreference(context: Context) {
         return sharedPreference?.getString(key, default)!!
     }
 
-    fun savePlaylistCode(value: String, key: String) {
+    fun saveLocalScreenCode(value: String, key: String) {
         if (sharedPreference == null) return
         sharedPreference!!.edit().putString(key, value).apply()
     }
 
-    fun retrievePlaylistCode(key: String, default: String): String {
+    fun retrieveLocalScreenCode(key: String, default: String): String {
+        return sharedPreference?.getString(key, default)!!
+    }
+
+    fun saveExternalScreenCode(value: String, key: String) {
+        if (sharedPreference == null) return
+        sharedPreference!!.edit().putString(key, value).apply()
+    }
+
+    fun retrieveExternalScreenCode(key: String, default: String): String {
         return sharedPreference?.getString(key, default)!!
     }
 
@@ -61,6 +70,25 @@ class AppPreference(context: Context) {
     }
 
     fun retrieveToTime(key: String, default: String): String {
+        return sharedPreference?.getString(key, default)!!
+    }
+
+    fun isAlarmCancelled(): Boolean {
+        if (sharedPreference == null) return false
+        return sharedPreference!!.getBoolean(DEFAULT_LAUNCHER, false)
+    }
+
+    fun setAlarmCancelled(flag: Boolean) {
+        if (sharedPreference == null) return
+        sharedPreference!!.edit().putBoolean(DEFAULT_LAUNCHER, flag).apply()
+    }
+
+    fun saveDefaultTimeOut(value: String, key: String) {
+        if (sharedPreference == null) return
+        sharedPreference!!.edit().putString(key, value).apply()
+    }
+
+    fun retrieveDefaultTimeOut(key: String, default: String): String {
         return sharedPreference?.getString(key, default)!!
     }
 

@@ -14,9 +14,13 @@ import javax.inject.Singleton
 @Singleton
 class ApiCall(context: Context) {
     val context = context
-     fun callApi() {
+    fun callApi() {
+        var localScreenCode = AppPreference(context).retrieveLocalScreenCode(
+            "LOCAL_SCREEN_CODE",
+            "LOCAL_CODE"
+        )
         ApiClient.client().create(ApiInterface::class.java)
-            .getTime().enqueue(object : Callback<List<TimeData>> {
+            .getTime(localScreenCode).enqueue(object : Callback<List<TimeData>> {
                 override fun onResponse(
                     call: Call<List<TimeData>>,
                     response: Response<List<TimeData>>
@@ -24,7 +28,10 @@ class ApiCall(context: Context) {
                     if (response.isSuccessful) {
                         val calendar = Calendar.getInstance()
                         val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
-                        AppPreference(context).saveFromTime(response.body()!![day].from, "FROM_TIME")
+                        AppPreference(context).saveFromTime(
+                            response.body()!![day].from,
+                            "FROM_TIME"
+                        )
                         AppPreference(context).saveToTime(
                             response.body()!![day].to,
                             "TO_TIME"

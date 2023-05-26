@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.digitalsln.project6mSignage.network.ApiCall
+import com.digitalsln.project6mSignage.tvLauncher.utilities.AppPreference
 import java.util.*
 
 class ScheduleApiTimerReceiverOne : BroadcastReceiver() {
@@ -15,6 +16,9 @@ class ScheduleApiTimerReceiverOne : BroadcastReceiver() {
 
         val call = ApiCall(context)
         call.callApi()
+
+        val toTime = AppPreference(context).retrieveFromTime("TO_TIME","TO_TIME")
+        Log.d("abhi", "$toTime")
 
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val i = Intent(context, ScheduleApiTimerReceiverTwo::class.java)
