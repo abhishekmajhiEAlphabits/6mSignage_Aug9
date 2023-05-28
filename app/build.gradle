@@ -1,6 +1,8 @@
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
 }
 
 android {
@@ -43,4 +45,6 @@ dependencies {
     implementation "org.jsoup:jsoup:1.13.1"
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0"
     implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'com.google.firebase:firebase-crashlytics-ktx:18.3.7'
+    implementation 'com.google.firebase:firebase-analytics-ktx:21.3.0'
 }
