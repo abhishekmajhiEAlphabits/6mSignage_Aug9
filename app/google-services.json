@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "185222218729",
-    "project_id": "signageandroidapp",
-    "storage_bucket": "signageandroidapp.appspot.com"
+    "project_number": "819551682685",
+    "project_id": "signageapp-b66ae",
+    "storage_bucket": "signageapp-b66ae.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:185222218729:android:1f9bdd2a2e1cdd03ff0178",
+        "mobilesdk_app_id": "1:819551682685:android:b80d2b83c6b8c39df9b114",
         "android_client_info": {
-          "package_name": "com.digitalsln.project6mSignage"
+          "package_name": "com.GoldenSands.SignageApp"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyA8-chPnX3bvB87Op874q-4DZy27tlRc1I"
+          "current_key": "AIzaSyDnRSvaeCbdsABAc4al5K6KseX4_aiwPMI"
         }
       ],
       "services": {
