@@ -13,7 +13,7 @@ class DisplayOverlayReceiver : BroadcastReceiver() {
     private val TAG = "6mSignage"
     override fun onReceive(context: Context, intent: Intent) {
         try {
-            Log.d("abhi","inside overlay ")
+            Log.d("TvTimer","inside overlay ")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 // check if the user has already granted
                 // the Draw over other apps permission

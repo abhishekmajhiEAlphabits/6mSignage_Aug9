@@ -8,6 +8,7 @@ import android.app.PendingIntent
 import android.content.*
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -26,8 +27,11 @@ import com.digitalsln.project6mSignage.databinding.ActivityMainBinding
 import com.digitalsln.project6mSignage.databinding.HandMadeStartAppDialogBinding
 import com.digitalsln.project6mSignage.databinding.PlayModeDialogBinding
 import com.digitalsln.project6mSignage.model.TimeData
+import com.digitalsln.project6mSignage.network.ApiCall
 import com.digitalsln.project6mSignage.network.ApiClient
 import com.digitalsln.project6mSignage.network.ApiInterface
+import com.digitalsln.project6mSignage.receivers.ScheduleApiTimerReceiverOne
+import com.digitalsln.project6mSignage.receivers.ScheduleApiTimerReceiverTwo
 import com.digitalsln.project6mSignage.tvLauncher.dialogs.ConfirmDialog
 import com.digitalsln.project6mSignage.tvLauncher.dialogs.SpinnerDialog
 import com.digitalsln.project6mSignage.tvLauncher.utilities.*
@@ -53,9 +57,10 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     var currentCommand = connectCommand
     var currentButtonLbl: String = ConnectionType.CONNECTED.value
     private val binding get() = _binding!!
-    private var isTimerSet = false
+
+    //    private var isTimerSet = false
+    //    private lateinit var wakeLock: PowerManager.WakeLock
     private var defaultValue: String? = null
-    private lateinit var wakeLock: PowerManager.WakeLock
     private lateinit var powerManager: PowerManager;
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -90,7 +95,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             defaultValue =
                 Settings.System.getString(contentResolver, Settings.System.SCREEN_OFF_TIMEOUT)
 
-            AppPreference(this@MainActivity).saveDefaultTimeOut(defaultValue!!,"TIME_OUT")
+            AppPreference(this@MainActivity).saveDefaultTimeOut(defaultValue!!, "TIME_OUT")
 
             powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
             wakeLock = powerManager.newWakeLock(
@@ -105,7 +110,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 override fun onConsoleMessage(message: String, lineNumber: Int, sourceID: String) {
                     binding.webView.evaluateJavascript("javascript:window.localStorage.getItem('signageScreenCode')",
                         ValueCallback<String?> { s ->
-                            Log.e("abhiCode", s!!)
+                            Log.e("TvTimer", s!!)
                             AppPreference(this@MainActivity).saveExternalScreenCode(
                                 s,
                                 "EXTERNAL_SCREEN_CODE"
@@ -121,7 +126,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 "Permissions not granted",
                 Toast.LENGTH_SHORT
             ).show()
-            Log.d("abhi", "error : $e")
+            Log.d("TvTimer", "error : $e")
         }
 
         showHandMadeStartAppDialog()
@@ -165,73 +170,42 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             val pi = PendingIntent.getBroadcast(applicationContext, 0, i, 0);
 
             val futureDate: Calendar = Calendar.getInstance()
-//            futureDate.add(Calendar.SECOND, 10)  //timerValue - the user selected timerValue
 
             val fromTime =
                 AppPreference(this@MainActivity).retrieveFromTime("FROM_TIME", "FROM_TIME")
-            val time = futureDate.timeInMillis
-            Log.d(
-                "abhi", "$time")
 
             val cal = Calendar.getInstance()
             val sdf = SimpleDateFormat("HH:mm:ss")
-            val date: Date = sdf.parse("19:06:00") //give the fromTime here
+            val date: Date = sdf.parse(fromTime) //give the fromTime here
             cal.time = date
 
+            val time = futureDate.time
             Log.d(
-                "abhi",
-                "${cal[Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
+                "TvTimer", "$time"
             )
-            futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
-            futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
-            futureDate.set(Calendar.SECOND, cal[Calendar.SECOND])
 
-            am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
-        } catch (e: Exception) {
-            Toast.makeText(
-                this,
-                "Permissions not granted",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
+            val value1 =
+                cal[Calendar.HOUR_OF_DAY] * 3600 + cal[Calendar.MINUTE] * 60 + cal[Calendar.SECOND]
 
-    @SuppressLint("InvalidWakeLockTag", "ShortAlarm")
-    private fun lockTV2() {
-        try {
-            if (wakeLock.isHeld) {
-                wakeLock.release()
+            val value2 =
+                futureDate[Calendar.HOUR_OF_DAY] * 3600 + futureDate[Calendar.MINUTE] * 60 + futureDate[Calendar.SECOND]
+
+            Log.d(
+                "TvTimer", "$value1 :: $value2"
+            )
+
+            if (value1 > value2) {
+                Log.d(
+                    "TvTimer",
+                    "${cal[Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
+                )
+                futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
+                futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
+                futureDate.set(Calendar.SECOND, cal[Calendar.SECOND])
+
+                am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
             }
-            isTimerSet = true
 
-            val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val i = Intent(applicationContext, DisplayOverlayReceiver::class.java)
-            i.action = "com.example.androidtvdemo.START_ALARM"
-            val pi = PendingIntent.getBroadcast(applicationContext, 0, i, 0);
-
-            val futureDate: Calendar = Calendar.getInstance()
-//            futureDate.add(Calendar.SECOND, 10)  //timerValue - the user selected timerValue
-
-            val fromTime =
-                AppPreference(this@MainActivity).retrieveFromTime("FROM_TIME", "FROM_TIME")
-            val time = futureDate.timeInMillis
-            Log.d(
-                "abhi", "$time")
-
-            val cal = Calendar.getInstance()
-            val sdf = SimpleDateFormat("HH:mm:ss")
-            val date: Date = sdf.parse("19:31:00") //give the fromTime here
-            cal.time = date
-
-            Log.d(
-                "abhi",
-                "${cal[Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
-            )
-            futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
-            futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
-            futureDate.set(Calendar.SECOND, cal[Calendar.SECOND])
-
-            am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
         } catch (e: Exception) {
             Toast.makeText(
                 this,
@@ -250,15 +224,29 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             "EXTERNAL_SCREEN_CODE",
             "EXTERNAL_CODE"
         )
-        if (localScreenCode != externalCode) {
-            AppPreference(this@MainActivity).setAlarmCancelled(true)
+        val isFirstRun = AppPreference(this@MainActivity).isFirstTimeRun()
+        if (isFirstRun) {
+            //alarm manager for everyday api hit timer after every 24hrs
+            scheduleApiCallTimer()
             callApi()
-            Log.d("abhi", "inside compare : $localScreenCode : $externalCode")
-
-            //here give the alarm manager for everyday api hit timer after every 24hrs
-//            scheduleApiCallTimer()
-            AppPreference(this@MainActivity).saveLocalScreenCode("LOCAL_SCREEN_CODE", externalCode)
+            AppPreference(this@MainActivity).saveLocalScreenCode(externalCode, "LOCAL_SCREEN_CODE")
+            AppPreference(this@MainActivity).setFirstTimeRun(false)
+        } else {
+            if (localScreenCode != externalCode) {
+                cancelMultipleAlarms()
+                callApi()
+                Log.d("TvTimer", "inside compare : $localScreenCode : $externalCode")
+                AppPreference(this@MainActivity).saveLocalScreenCode(
+                    externalCode,
+                    "LOCAL_SCREEN_CODE"
+                )
+//                scheduleApiCallTimer() //for testing, when enable this disable callApi above
+            } else {
+                Log.d("TvTimer", "code equal")
+            }
+            Log.d("TvTimer", "not first")
         }
+
     }
 
     private fun scheduleApiCallTimer() {
@@ -268,10 +256,11 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         val pi = PendingIntent.getBroadcast(applicationContext, 0, i, 0);
 
         val futureDate: Calendar = Calendar.getInstance()
-        futureDate.add(Calendar.SECOND, 10)
-//        futureDate.set(Calendar.HOUR_OF_DAY, 17)
-//        futureDate.set(Calendar.MINUTE, 58)
-//        futureDate.set(Calendar.SECOND, 0)
+        futureDate.set(Calendar.HOUR_OF_DAY, 1)
+        futureDate.set(Calendar.MINUTE, 5)
+        futureDate.add(Calendar.SECOND, 0)
+
+        Log.d("TvTimer", "repeat alarm")
 
         am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
     }
@@ -298,109 +287,37 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                             response.body()!![day].to,
                             "TO_TIME"
                         )
-                        Log.d("abhi", "${response.body()}")
-                        Log.d("abhi", "$day")
-                        Log.d("abhi", "${response.body()!![day].from}")
-                        Log.d("abhi", "${response.body()!![day].to}")
-                        var alarmCancelStatus = AppPreference(this@MainActivity).isAlarmCancelled()
-//                        if (alarmCancelStatus) {
-//                            cancelMultipleAlarms()
-//                            lockTV() //new timer set after cancelling old alarms
-//                            Log.d("abhi", "inside if")
-//                        } else {
-//                            lockTV()
-//                            Log.d("abhi", "inside else")
-//                        }
+                        Log.d("TvTimer", "${response.body()}")
                         lockTV()
-                        AppPreference(this@MainActivity).setAlarmCancelled(false)
                     } else {
-                        Log.d("abhi", "Failed")
+                        Log.d("TvTimer", "Failed")
                     }
                 }
 
                 override fun onFailure(call: Call<List<TimeData>>, t: Throwable) {
-                    Log.d("abhi", "$t")
+                    Log.d("TvTimer", "$t")
                 }
             })
     }
 
-    private fun callApi2() {
-        var localScreenCode = AppPreference(this@MainActivity).retrieveLocalScreenCode(
-            "LOCAL_SCREEN_CODE",
-            "LOCAL_CODE"
-        )
-        ApiClient.client().create(ApiInterface::class.java)
-            .getTime(localScreenCode).enqueue(object : Callback<List<TimeData>> {
-                override fun onResponse(
-                    call: Call<List<TimeData>>,
-                    response: Response<List<TimeData>>
-                ) {
-                    if (response.isSuccessful) {
-                        val calendar = Calendar.getInstance()
-                        val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
-                        AppPreference(this@MainActivity).saveFromTime(
-                            response.body()!![day].from,
-                            "FROM_TIME"
-                        )
-                        AppPreference(this@MainActivity).saveToTime(
-                            response.body()!![day].to,
-                            "TO_TIME"
-                        )
-                        Log.d("abhi", "${response.body()}")
-                        Log.d("abhi", "$day")
-                        Log.d("abhi", "${response.body()!![day].from}")
-                        Log.d("abhi", "${response.body()!![day].to}")
-                        var alarmCancelStatus = AppPreference(this@MainActivity).isAlarmCancelled()
-//                        if (alarmCancelStatus) {
-////                            cancelMultipleAlarms()
-//                            lockTV() //new timer set after cancelling old alarms
-//                            Log.d("abhi", "inside if")
-//                        } else {
-//                            lockTV()
-//                            Log.d("abhi", "inside else")
-//                        }
-                        lockTV2()
-                        AppPreference(this@MainActivity).setAlarmCancelled(false)
-                    } else {
-                        Log.d("abhi", "Failed")
-                    }
-                }
-
-                override fun onFailure(call: Call<List<TimeData>>, t: Throwable) {
-                    Log.d("abhi", "$t")
-                }
-            })
-    }
-
-//    private fun cancelAlarms() {
-//        val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-//        val i = Intent(applicationContext, DisplayOverlayReceiver::class.java)
-//        i.action = "com.example.androidtvdemo.START_ALARM"
-//        val pi =
-//            PendingIntent.getBroadcast(applicationContext, 0, i, 0);
-//        am.cancel(pi)
-//
-//        Log.d("abhi", "inside cancel")
-//    }
-
-    fun cancelMultipleAlarms() {
+    private fun cancelMultipleAlarms() {
         //if alarm is set in past time then it will execute even after cancel alarm
         val size = 4
         val alarmManagers = arrayOfNulls<AlarmManager>(size)
-        val intents = arrayOf<Intent>(Intent(applicationContext, DisplayOverlayReceiver::class.java),
+        val intents = arrayOf<Intent>(
+            Intent(applicationContext, DisplayOverlayReceiver::class.java),
             Intent(applicationContext, ShutDownReceiver::class.java),
             Intent(applicationContext, TimeOutReceiver::class.java),
-            Intent(applicationContext, WakeUpReceiver::class.java))
+            Intent(applicationContext, WakeUpReceiver::class.java)
+        )
         for (i in 0 until size) {
             alarmManagers[i] = getSystemService(ALARM_SERVICE) as AlarmManager
-//            intents[i] = Intent(applicationContext, AlarmReceiver::class.java)
-            //we don't need to any flags here so it is zero (0)
             val pendingIntent = PendingIntent.getBroadcast(
                 applicationContext, 0,
                 intents[i]!!, PendingIntent.FLAG_CANCEL_CURRENT
             )
             alarmManagers[i]!!.cancel(pendingIntent)
-            Log.d("abhi", "inside cancel")
+            Log.d("TvTimer", "inside cancel")
         }
     }
 
@@ -563,7 +480,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                     showPlayModeDialog()
                 }
                 showPlayModeButtons()
-
             }
 
             btResetSettings.setOnClickListener {
@@ -585,11 +501,8 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             }
 
             btRefresh.setOnClickListener {
-                AppPreference(this@MainActivity).setAlarmCancelled(true)
                 cancelMultipleAlarms()
-                callApi2()//dummy api
-                //here lockTv() is called to schedule lock after cancel all alarms on refresh button
-                //for the current day because for the next day api will be called and lockTv also
+                callApi()//recall api to get new times after refresh
             }
         }
     }
@@ -849,6 +762,8 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     }
 
     companion object {
+        var isTimerSet = false
+        lateinit var wakeLock: PowerManager.WakeLock
         const val REAL_URL = "https://6lb.menu/signage"
         const val TEST_URL = "https://test.6lb.menu/signage"
         private const val LAST_WEB_URL = "web.url.last"

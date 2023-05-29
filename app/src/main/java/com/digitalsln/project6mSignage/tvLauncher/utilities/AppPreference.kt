@@ -75,12 +75,12 @@ class AppPreference(context: Context) {
 
     fun isAlarmCancelled(): Boolean {
         if (sharedPreference == null) return false
-        return sharedPreference!!.getBoolean(DEFAULT_LAUNCHER, false)
+        return sharedPreference!!.getBoolean("ALARM_CANCELLED", false)
     }
 
     fun setAlarmCancelled(flag: Boolean) {
         if (sharedPreference == null) return
-        sharedPreference!!.edit().putBoolean(DEFAULT_LAUNCHER, flag).apply()
+        sharedPreference!!.edit().putBoolean("ALARM_CANCELLED", flag).apply()
     }
 
     fun saveDefaultTimeOut(value: String, key: String) {
@@ -90,6 +90,16 @@ class AppPreference(context: Context) {
 
     fun retrieveDefaultTimeOut(key: String, default: String): String {
         return sharedPreference?.getString(key, default)!!
+    }
+
+    fun isFirstTimeRun(): Boolean {
+        if (sharedPreference == null) return false
+        return sharedPreference!!.getBoolean("FIRST_RUN", true)
+    }
+
+    fun setFirstTimeRun(flag: Boolean) {
+        if (sharedPreference == null) return
+        sharedPreference!!.edit().putBoolean("FIRST_RUN", flag).apply()
     }
 
 }
