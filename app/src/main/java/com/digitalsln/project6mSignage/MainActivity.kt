@@ -477,7 +477,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             }
 
             btPlayMode.setOnClickListener {
-                if (playModeDialog == null) {
+                if (playModeDialog == null || !playModeDialog!!.isShowing) {
                     showPlayModeDialog()
                 }
                 showPlayModeButtons()

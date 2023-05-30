@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "185222218729",
+    "project_id": "signageandroidapp",
+    "storage_bucket": "signageandroidapp.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:185222218729:android:1f9bdd2a2e1cdd03ff0178",
+        "android_client_info": {
+          "package_name": "com.digitalsln.project6mSignage"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA8-chPnX3bvB87Op874q-4DZy27tlRc1I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
