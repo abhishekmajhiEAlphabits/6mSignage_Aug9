@@ -9,8 +9,12 @@ import android.os.Build
 import android.util.Log
 import android.view.*
 import android.widget.Toast
+import com.digitalsln.project6mSignage.receivers.ShutDownReceiver
 import java.util.*
 
+/**
+ * overlay screen to show on turn off countdown
+ */
 class Window(context: Context) {
 
     // declaring required variables

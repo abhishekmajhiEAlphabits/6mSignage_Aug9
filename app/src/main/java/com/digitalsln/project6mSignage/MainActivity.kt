@@ -8,7 +8,6 @@ import android.app.PendingIntent
 import android.content.*
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -27,11 +26,9 @@ import com.digitalsln.project6mSignage.databinding.ActivityMainBinding
 import com.digitalsln.project6mSignage.databinding.HandMadeStartAppDialogBinding
 import com.digitalsln.project6mSignage.databinding.PlayModeDialogBinding
 import com.digitalsln.project6mSignage.model.TimeData
-import com.digitalsln.project6mSignage.network.ApiCall
 import com.digitalsln.project6mSignage.network.ApiClient
 import com.digitalsln.project6mSignage.network.ApiInterface
-import com.digitalsln.project6mSignage.receivers.ScheduleApiTimerReceiverOne
-import com.digitalsln.project6mSignage.receivers.ScheduleApiTimerReceiverTwo
+import com.digitalsln.project6mSignage.receivers.*
 import com.digitalsln.project6mSignage.tvLauncher.dialogs.ConfirmDialog
 import com.digitalsln.project6mSignage.tvLauncher.dialogs.SpinnerDialog
 import com.digitalsln.project6mSignage.tvLauncher.utilities.*
@@ -57,9 +54,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     var currentCommand = connectCommand
     var currentButtonLbl: String = ConnectionType.CONNECTED.value
     private val binding get() = _binding!!
-
-    //    private var isTimerSet = false
-    //    private lateinit var wakeLock: PowerManager.WakeLock
     private var defaultValue: String? = null
     private lateinit var powerManager: PowerManager;
 
@@ -89,31 +83,31 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         }
 
         try {
-            checkOverlayPermission();
+            checkOverlayPermission()
             checkWritePermission()
 
+            /* Fetch and sets the default screen timeOut value in preferences */
             defaultValue =
                 Settings.System.getString(contentResolver, Settings.System.SCREEN_OFF_TIMEOUT)
+            AppPreference(this@MainActivity).saveDefaultTimeOut(defaultValue!!, Constants.timeOut)
 
-            AppPreference(this@MainActivity).saveDefaultTimeOut(defaultValue!!, "TIME_OUT")
-
+            /* creates wakelock and acquires it to keep screen on */
             powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
             wakeLock = powerManager.newWakeLock(
                 PowerManager.FULL_WAKE_LOCK or
                         PowerManager.ACQUIRE_CAUSES_WAKEUP or
                         PowerManager.ON_AFTER_RELEASE, "appname::WakeLock"
             )
-
             wakeLock.acquire()
 
+            /* Fetches the screen code from the browser localStorage and stores in preferences */
             binding.webView.setWebChromeClient(object : WebChromeClient() {
                 override fun onConsoleMessage(message: String, lineNumber: Int, sourceID: String) {
                     binding.webView.evaluateJavascript("javascript:window.localStorage.getItem('signageScreenCode')",
                         ValueCallback<String?> { s ->
-                            Log.e("TvTimer", s!!)
                             AppPreference(this@MainActivity).saveExternalScreenCode(
                                 s,
-                                "EXTERNAL_SCREEN_CODE"
+                                Constants.externalScreenCode
                             )
                         })
                     super.onConsoleMessage(message, lineNumber, sourceID)
@@ -126,14 +120,13 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 "Permissions not granted",
                 Toast.LENGTH_SHORT
             ).show()
-            Log.d("TvTimer", "error : $e")
+            Log.d(TAG2, "error : $e")
         }
 
         showHandMadeStartAppDialog()
     }
 
-    /* To ask user to grant the Overlay permission
-     */
+    /* To ask user to grant the Overlay permission */
     private fun checkOverlayPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (!Settings.canDrawOverlays(this)) {
@@ -144,8 +137,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         }
     }
 
-    /* To ask user to grant the Write System Settings permission
-    */
+    /* To ask user to grant the Write System Settings permission */
     @RequiresApi(Build.VERSION_CODES.M)
     private fun checkWritePermission() {
         if (!Settings.System.canWrite(this)) {
@@ -159,51 +151,52 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     @SuppressLint("InvalidWakeLockTag", "ShortAlarm")
     private fun lockTV() {
         try {
+            /* if wakelock is acquired it is released to turn off screen at set time */
             if (wakeLock.isHeld) {
                 wakeLock.release()
             }
             isTimerSet = true
 
+            /* Initializes and schedules alarm manager for performing screen off and on */
             val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val i = Intent(applicationContext, DisplayOverlayReceiver::class.java)
-            i.action = "com.example.androidtvdemo.START_ALARM"
             val pi = PendingIntent.getBroadcast(applicationContext, 0, i, 0);
-
             val futureDate: Calendar = Calendar.getInstance()
-
             val fromTime =
-                AppPreference(this@MainActivity).retrieveFromTime("FROM_TIME", "FROM_TIME")
-
+                AppPreference(this@MainActivity).retrieveFromTime(
+                    Constants.fromTime,
+                    Constants.defaultFromTime
+                )
             val cal = Calendar.getInstance()
             val sdf = SimpleDateFormat("HH:mm:ss")
             val date: Date = sdf.parse(fromTime) //give the fromTime here
             cal.time = date
 
-            val time = futureDate.time
-            Log.d(
-                "TvTimer", "$time"
-            )
 
-            val value1 =
+            /* gets the time from api and compares it with system current time */
+            val apiTime =
                 cal[Calendar.HOUR_OF_DAY] * 3600 + cal[Calendar.MINUTE] * 60 + cal[Calendar.SECOND]
-
-            val value2 =
+            val systemCurrentTime =
                 futureDate[Calendar.HOUR_OF_DAY] * 3600 + futureDate[Calendar.MINUTE] * 60 + futureDate[Calendar.SECOND]
-
             Log.d(
-                "TvTimer", "$value1 :: $value2"
+                TAG2, "$apiTime :: $systemCurrentTime"
             )
 
-            if (value1 > value2) {
+
+            /* if time from api is greater than system time then only schedules the alarm */
+            if (apiTime > systemCurrentTime) {
                 Log.d(
-                    "TvTimer",
+                    TAG2,
                     "${cal[Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
                 )
                 futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
                 futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
                 futureDate.set(Calendar.SECOND, cal[Calendar.SECOND])
-
                 am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
+            } else {
+                if (!wakeLock.isHeld) {
+                    wakeLock.acquire()
+                }
             }
 
         } catch (e: Exception) {
@@ -215,60 +208,67 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         }
     }
 
+    /* starts scheduler for calling the api everyday at scheduled time */
     private fun startScheduler() {
+        if (!wakeLock.isHeld) {
+            wakeLock.acquire()
+        }
+
+        /* gets the local screen code and screen code from browser */
         val localScreenCode = AppPreference(this@MainActivity).retrieveLocalScreenCode(
-            "LOCAL_SCREEN_CODE",
-            "LOCAL_CODE"
+            Constants.localScreenCode,
+            Constants.defaultLocalScreenCode
         )
         val externalCode = AppPreference(this@MainActivity).retrieveExternalScreenCode(
-            "EXTERNAL_SCREEN_CODE",
-            "EXTERNAL_CODE"
+            Constants.externalScreenCode,
+            Constants.defaultExternalScreenCode
         )
+
+        /* checks if the app is run first time */
         val isFirstRun = AppPreference(this@MainActivity).isFirstTimeRun()
         if (isFirstRun) {
+            /* runs on first run of the app after install and starts the function to call the api everyday */
             //alarm manager for everyday api hit timer after every 24hrs
             scheduleApiCallTimer()
             callApi()
-            AppPreference(this@MainActivity).saveLocalScreenCode(externalCode, "LOCAL_SCREEN_CODE")
+            AppPreference(this@MainActivity).saveLocalScreenCode(
+                externalCode,
+                Constants.localScreenCode
+            )
             AppPreference(this@MainActivity).setFirstTimeRun(false)
         } else {
             if (localScreenCode != externalCode) {
+                /* if saved screen code is not same to the code from the browser then cancels all the alarms and call api again */
                 cancelMultipleAlarms()
                 callApi()
-                Log.d("TvTimer", "inside compare : $localScreenCode : $externalCode")
                 AppPreference(this@MainActivity).saveLocalScreenCode(
                     externalCode,
-                    "LOCAL_SCREEN_CODE"
+                    Constants.localScreenCode
                 )
-//                scheduleApiCallTimer() //for testing, when enable this disable callApi above
             } else {
-                Log.d("TvTimer", "code equal")
+                Log.d(TAG2, "equal")
             }
-            Log.d("TvTimer", "not first")
+            Log.d(TAG2, "!first")
         }
-
     }
 
+    /* alarm manager to initialize and call the api */
     private fun scheduleApiCallTimer() {
         val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val i = Intent(applicationContext, ScheduleApiTimerReceiverOne::class.java)
-        i.action = "com.example.androidtvdemo.START_ALARM"
+        val i = Intent(applicationContext, ApiCallSchedulerInitReceiver::class.java)
         val pi = PendingIntent.getBroadcast(applicationContext, 0, i, 0);
-
         val futureDate: Calendar = Calendar.getInstance()
-        futureDate.set(Calendar.HOUR_OF_DAY, 1)
-        futureDate.set(Calendar.MINUTE, 5)
-        futureDate.add(Calendar.SECOND, 0)
-
-        Log.d("TvTimer", "repeat alarm")
-
+        futureDate.set(Calendar.HOUR_OF_DAY, 23)
+        futureDate.set(Calendar.MINUTE, 59)
+        futureDate.set(Calendar.SECOND, 0)
         am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
     }
 
+
     private fun callApi() {
         var localScreenCode = AppPreference(this@MainActivity).retrieveLocalScreenCode(
-            "LOCAL_SCREEN_CODE",
-            "LOCAL_CODE"
+            Constants.localScreenCode,
+            Constants.defaultLocalScreenCode
         )
         ApiClient.client().create(ApiInterface::class.java)
             .getTime(localScreenCode).enqueue(object : Callback<List<TimeData>> {
@@ -281,27 +281,28 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                         val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
                         AppPreference(this@MainActivity).saveFromTime(
                             response.body()!![day].from,
-                            "FROM_TIME"
+                            Constants.fromTime
                         )
                         AppPreference(this@MainActivity).saveToTime(
                             response.body()!![day].to,
-                            "TO_TIME"
+                            Constants.toTime
                         )
-                        Log.d("TvTimer", "${response.body()}")
+                        Log.d(TAG2, "${response.body()}")
+                        /* if api call is successful then alarm manager for screen off/on is called */
                         lockTV()
                     } else {
-                        Log.d("TvTimer", "Failed")
+                        Log.d(TAG2, "Failed")
                     }
                 }
 
                 override fun onFailure(call: Call<List<TimeData>>, t: Throwable) {
-                    Log.d("TvTimer", "$t")
+                    Log.d(TAG2, "$t")
                 }
             })
     }
 
+    /* cancels all previously scheduled alarms */
     private fun cancelMultipleAlarms() {
-        //if alarm is set in past time then it will execute even after cancel alarm
         val size = 4
         val alarmManagers = arrayOfNulls<AlarmManager>(size)
         val intents = arrayOf<Intent>(
@@ -317,7 +318,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 intents[i]!!, PendingIntent.FLAG_CANCEL_CURRENT
             )
             alarmManagers[i]!!.cancel(pendingIntent)
-            Log.d("TvTimer", "inside cancel")
+            Log.d(TAG2, "cancelled")
         }
     }
 
@@ -501,8 +502,11 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             }
 
             btRefresh.setOnClickListener {
-                cancelMultipleAlarms()
+                cancelMultipleAlarms() //cancels all alarms
                 callApi()//recall api to get new times after refresh
+                if (!wakeLock.isHeld) {
+                    wakeLock.acquire()
+                }
             }
         }
     }
@@ -675,14 +679,14 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         super.onResume()
 
         try {
+            /* when app in foreground state then acquires wakelock */
             checkOverlayPermission();
             checkWritePermission()
-
             if (isTimerSet) {
-                Log.d(TAG, "Timer set..onResume")
+                Log.d(TAG2, "onResume")
                 if (!wakeLock.isHeld) {
                     wakeLock.acquire()
-                    Log.d(TAG, "Timer set..onResume..wakelock acquire")
+                    Log.d(TAG2, "wakelock acquired")
                 }
             } else {
                 Settings.System.putString(
@@ -707,13 +711,12 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             binder!!.notifyPausingActivity(connection!!)
         }
         super.onPause()
-
         try {
+            /* when app in background state then resets the default timeOut */
             checkOverlayPermission();
             checkWritePermission()
-
             if (isTimerSet) {
-                Log.d(TAG, "Timer set..onPause")
+                Log.d(TAG, "onPause")
             } else {
                 Settings.System.putString(
                     contentResolver,
@@ -768,6 +771,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         const val TEST_URL = "https://test.6lb.menu/signage"
         private const val LAST_WEB_URL = "web.url.last"
         private const val TAG = "MainActivity"
+        private const val TAG2 = "TvTimer"
         const val PORT = 5555
         const val connectCommand = "pm disable-user --user 0 com.google.android.tvlauncher\n"
         const val unConnectCommand =

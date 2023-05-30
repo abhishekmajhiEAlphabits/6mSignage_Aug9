@@ -10,6 +10,9 @@ import android.os.IBinder
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 
+/**
+ * service to start alarm manager for setting screen turn off/on
+ */
 class ForegroundService : Service() {
 
     private var window: Window? = null

@@ -7,10 +7,11 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
-import com.digitalsln.project6mSignage.DisplayOverlayReceiver
+import com.digitalsln.project6mSignage.receivers.DisplayOverlayReceiver
 import com.digitalsln.project6mSignage.MainActivity
 import com.digitalsln.project6mSignage.model.TimeData
 import com.digitalsln.project6mSignage.tvLauncher.utilities.AppPreference
+import com.digitalsln.project6mSignage.tvLauncher.utilities.Constants
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -20,11 +21,12 @@ import javax.inject.Singleton
 
 @Singleton
 class ApiCall(context: Context) {
+    private val TAG = "TvTimer"
     val context = context
     fun callApi() {
         var localScreenCode = AppPreference(context).retrieveLocalScreenCode(
-            "LOCAL_SCREEN_CODE",
-            "LOCAL_CODE"
+            Constants.localScreenCode,
+            Constants.defaultLocalScreenCode
         )
         ApiClient.client().create(ApiInterface::class.java)
             .getTime(localScreenCode).enqueue(object : Callback<List<TimeData>> {
@@ -37,21 +39,22 @@ class ApiCall(context: Context) {
                         val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
                         AppPreference(context).saveFromTime(
                             response.body()!![day].from,
-                            "FROM_TIME"
+                            Constants.fromTime
                         )
                         AppPreference(context).saveToTime(
                             response.body()!![day].to,
-                            "TO_TIME"
+                            Constants.toTime
                         )
-                        Log.d("TvTimer", "${response.body()}")
+                        Log.d(TAG, "${response.body()}")
+                        /* if api call is successful then alarm manager for screen off/on is called */
                         lockTV()
                     } else {
-                        Log.d("TvTimer", "Failed")
+                        Log.d(TAG, "Failed")
                     }
                 }
 
                 override fun onFailure(call: Call<List<TimeData>>, t: Throwable) {
-                    Log.d("TvTimer", "$t")
+                    Log.d(TAG, "$t")
                 }
             })
     }
@@ -60,35 +63,47 @@ class ApiCall(context: Context) {
     private fun lockTV() {
         try {
             if (MainActivity.wakeLock.isHeld) {
-                Log.d("TvTimer", "${MainActivity.wakeLock.isHeld}")
+                Log.d(TAG, "${MainActivity.wakeLock.isHeld}")
                 MainActivity.wakeLock.release()
             }
             MainActivity.isTimerSet = true
-
+            /* initializes and schedules alarm manager for performing screen off and on */
             val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val i = Intent(context, DisplayOverlayReceiver::class.java)
-            i.action = "com.example.androidtvdemo.START_ALARM"
             val pi = PendingIntent.getBroadcast(context, 0, i, 0);
-
             val futureDate: Calendar = Calendar.getInstance()
-
             val fromTime =
-                AppPreference(context).retrieveFromTime("FROM_TIME", "FROM_TIME")
-
+                AppPreference(context).retrieveFromTime(
+                    Constants.fromTime,
+                    Constants.defaultFromTime
+                )
             val cal = Calendar.getInstance()
             val sdf = SimpleDateFormat("HH:mm:ss")
             val date: Date = sdf.parse(fromTime) //give the fromTime here
             cal.time = date
-
+            /* gets the time from api and compares it with system current time */
+            val apiTime =
+                cal[Calendar.HOUR_OF_DAY] * 3600 + cal[Calendar.MINUTE] * 60 + cal[Calendar.SECOND]
+            val systemCurrentTime =
+                futureDate[Calendar.HOUR_OF_DAY] * 3600 + futureDate[Calendar.MINUTE] * 60 + futureDate[Calendar.SECOND]
             Log.d(
-                "TvTimer",
-                "${cal[Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
+                TAG, "$apiTime :: $systemCurrentTime"
             )
-            futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
-            futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
-            futureDate.set(Calendar.SECOND, cal[Calendar.SECOND])
-
-            am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
+            /* if time from api is greater than system time then only schedules the alarm */
+            if (apiTime > systemCurrentTime) {
+                Log.d(
+                    TAG,
+                    "${cal[Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
+                )
+                futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
+                futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
+                futureDate.set(Calendar.SECOND, cal[Calendar.SECOND])
+                am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
+            } else {
+                if (!MainActivity.wakeLock.isHeld) {
+                    MainActivity.wakeLock.acquire()
+                }
+            }
         } catch (e: Exception) {
             Toast.makeText(
                 context,

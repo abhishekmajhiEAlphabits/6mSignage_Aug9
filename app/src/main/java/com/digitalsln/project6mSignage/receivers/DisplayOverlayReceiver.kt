@@ -1,19 +1,22 @@
-package com.digitalsln.project6mSignage
+package com.digitalsln.project6mSignage.receivers
 
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
+import com.digitalsln.project6mSignage.ForegroundService
 
+/**
+ * receiver to show display overlay screen
+ */
 class DisplayOverlayReceiver : BroadcastReceiver() {
-    private val TAG = "6mSignage"
+    private val TAG = "TvTimer"
     override fun onReceive(context: Context, intent: Intent) {
         try {
-            Log.d("TvTimer","inside overlay ")
+            Log.d(TAG,"inside overlay ")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 // check if the user has already granted
                 // the Draw over other apps permission
