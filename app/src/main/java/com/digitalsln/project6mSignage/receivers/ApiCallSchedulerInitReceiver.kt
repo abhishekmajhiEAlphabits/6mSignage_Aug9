@@ -5,6 +5,8 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.util.Log
+import android.widget.Toast
 import java.util.*
 
 /**
@@ -16,7 +18,14 @@ class ApiCallSchedulerInitReceiver:BroadcastReceiver() {
         val i = Intent(context, ScheduleApiTimerReceiverOne::class.java)
         val pi = PendingIntent.getBroadcast(context, 0, i, 0);
         val futureDate: Calendar = Calendar.getInstance()
+        Log.d("TvTimer","inside int :: ${futureDate.time}")
         futureDate.add(Calendar.HOUR_OF_DAY, 2)
+        Log.d("TvTimer","${futureDate.time}")
+        Toast.makeText(
+            context,
+            "starting api scheduler...",
+            Toast.LENGTH_SHORT
+        ).show()
         am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
     }
 }

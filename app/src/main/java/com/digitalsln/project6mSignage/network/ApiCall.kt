@@ -5,8 +5,10 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import com.digitalsln.project6mSignage.receivers.DisplayOverlayReceiver
 import com.digitalsln.project6mSignage.MainActivity
 import com.digitalsln.project6mSignage.model.TimeData
@@ -16,6 +18,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
 import java.util.*
 import javax.inject.Singleton
 
@@ -28,27 +31,59 @@ class ApiCall(context: Context) {
             Constants.localScreenCode,
             Constants.defaultLocalScreenCode
         )
+
+        Toast.makeText(context,"Screen Code From App Preference :: $localScreenCode",Toast.LENGTH_LONG).show()
         ApiClient.client().create(ApiInterface::class.java)
             .getTime(localScreenCode).enqueue(object : Callback<List<TimeData>> {
+                @RequiresApi(Build.VERSION_CODES.O)
                 override fun onResponse(
                     call: Call<List<TimeData>>,
                     response: Response<List<TimeData>>
                 ) {
                     if (response.isSuccessful) {
-                        val calendar = Calendar.getInstance()
-                        val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
-                        AppPreference(context).saveFromTime(
-                            response.body()!![day].from,
-                            Constants.fromTime
-                        )
-                        AppPreference(context).saveToTime(
-                            response.body()!![day].to,
-                            Constants.toTime
-                        )
-                        Log.d(TAG, "${response.body()}")
-                        /* if api call is successful then alarm manager for screen off/on is called */
-                        lockTV()
+                        Toast.makeText(context,""+response,Toast.LENGTH_LONG).show();
+
+                        if( response.body()!=null){
+                            val calendar = Calendar.getInstance()
+                            val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
+                            var fromTime  = ""
+                            var toTime = ""
+
+                            if(response.body()!![day]!=null && response.body()!![day].from!=null){
+                                toTime = response.body()!![day].from;
+                            }
+
+                            if(response.body()!![day]!=null && response.body()!![day].to!=null){
+                                fromTime = response.body()!![day].to;
+                            }
+
+                            if(fromTime.isNotEmpty() && toTime.isNotEmpty()){
+                                AppPreference(context).saveFromTime(
+                                    fromTime,
+                                    Constants.fromTime
+                                )
+                                AppPreference(context).saveToTime(
+                                    toTime,
+                                    Constants.toTime
+                                )
+                                Toast.makeText(
+                                    context,
+                                    "fromTime : $fromTime & toTime : $toTime",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                Log.d(TAG, "${response.body()}")
+                                /* if api call is successful then alarm manager for screen off/on is called */
+                                lockTV()
+                            }
+
+                        }
+
                     } else {
+                        Toast.makeText(
+                            context,
+                            "Failed api call",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         Log.d(TAG, "Failed")
                     }
                 }
@@ -59,6 +94,7 @@ class ApiCall(context: Context) {
             })
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("InvalidWakeLockTag", "ShortAlarm")
     private fun lockTV() {
         try {
@@ -71,6 +107,10 @@ class ApiCall(context: Context) {
             val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val i = Intent(context, DisplayOverlayReceiver::class.java)
             val pi = PendingIntent.getBroadcast(context, 0, i, 0);
+
+
+
+
             val futureDate: Calendar = Calendar.getInstance()
             val fromTime =
                 AppPreference(context).retrieveFromTime(

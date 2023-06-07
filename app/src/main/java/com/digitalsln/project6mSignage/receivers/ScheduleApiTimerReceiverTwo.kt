@@ -24,7 +24,9 @@ class ScheduleApiTimerReceiverTwo : BroadcastReceiver() {
         val i = Intent(context, ScheduleApiTimerReceiverOne::class.java)
         val pi = PendingIntent.getBroadcast(context, 0, i, 0);
         val futureDate: Calendar = Calendar.getInstance()
+        Log.d("TvTimer","inside api 2 :: ${futureDate.time}")
         futureDate.add(Calendar.HOUR_OF_DAY, 24)
+        Log.d("TvTimer","${futureDate.time}")
         am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
     }
 

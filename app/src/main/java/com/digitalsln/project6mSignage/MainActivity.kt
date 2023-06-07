@@ -37,6 +37,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
 import java.util.*
 
 
@@ -100,11 +101,19 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             )
             wakeLock.acquire()
 
+
             /* Fetches the screen code from the browser localStorage and stores in preferences */
             binding.webView.setWebChromeClient(object : WebChromeClient() {
+
                 override fun onConsoleMessage(message: String, lineNumber: Int, sourceID: String) {
                     binding.webView.evaluateJavascript("javascript:window.localStorage.getItem('signageScreenCode')",
                         ValueCallback<String?> { s ->
+                            var s = s.replace("\"", "");
+                            Toast.makeText(
+                                applicationContext,
+                                "Screen Code : $s",
+                                Toast.LENGTH_SHORT
+                            ).show()
                             AppPreference(this@MainActivity).saveExternalScreenCode(
                                 s,
                                 Constants.externalScreenCode
@@ -112,6 +121,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                         })
                     super.onConsoleMessage(message, lineNumber, sourceID)
                 }
+
             })
 
         } catch (e: Exception) {
@@ -162,6 +172,8 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             val i = Intent(applicationContext, DisplayOverlayReceiver::class.java)
             val pi = PendingIntent.getBroadcast(applicationContext, 0, i, 0);
             val futureDate: Calendar = Calendar.getInstance()
+
+
             val fromTime =
                 AppPreference(this@MainActivity).retrieveFromTime(
                     Constants.fromTime,
@@ -181,6 +193,15 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             Log.d(
                 TAG2, "$apiTime :: $systemCurrentTime"
             )
+
+            var hrs = futureDate[Calendar.HOUR_OF_DAY]
+            var mins = futureDate[Calendar.MINUTE]
+            var secs = futureDate[Calendar.SECOND]
+            Toast.makeText(
+                applicationContext,
+                "Current Hours :: $hrs && Current Mins : $mins && Current secs : $secs",
+                Toast.LENGTH_LONG
+            ).show()
 
 
             /* if time from api is greater than system time then only schedules the alarm */
@@ -228,23 +249,25 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         val isFirstRun = AppPreference(this@MainActivity).isFirstTimeRun()
         if (isFirstRun) {
             /* runs on first run of the app after install and starts the function to call the api everyday */
-            //alarm manager for everyday api hit timer after every 24hrs
-            scheduleApiCallTimer()
-            callApi()
             AppPreference(this@MainActivity).saveLocalScreenCode(
                 externalCode,
                 Constants.localScreenCode
             )
+
+            //alarm manager for everyday api hit timer after every 24hrs
+            scheduleApiCallTimer()
+            callApi()
             AppPreference(this@MainActivity).setFirstTimeRun(false)
         } else {
             if (localScreenCode != externalCode) {
-                /* if saved screen code is not same to the code from the browser then cancels all the alarms and call api again */
-                cancelMultipleAlarms()
-                callApi()
                 AppPreference(this@MainActivity).saveLocalScreenCode(
                     externalCode,
                     Constants.localScreenCode
                 )
+
+                /* if saved screen code is not same to the code from the browser then cancels all the alarms and call api again */
+                cancelMultipleAlarms()
+                callApi()
             } else {
                 Log.d(TAG2, "equal")
             }
@@ -270,6 +293,8 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             Constants.localScreenCode,
             Constants.defaultLocalScreenCode
         )
+        Toast.makeText(applicationContext, "Pref is :: $localScreenCode", Toast.LENGTH_LONG).show()
+
         ApiClient.client().create(ApiInterface::class.java)
             .getTime(localScreenCode).enqueue(object : Callback<List<TimeData>> {
                 override fun onResponse(
@@ -277,20 +302,49 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                     response: Response<List<TimeData>>
                 ) {
                     if (response.isSuccessful) {
-                        val calendar = Calendar.getInstance()
-                        val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
-                        AppPreference(this@MainActivity).saveFromTime(
-                            response.body()!![day].from,
-                            Constants.fromTime
-                        )
-                        AppPreference(this@MainActivity).saveToTime(
-                            response.body()!![day].to,
-                            Constants.toTime
-                        )
-                        Log.d(TAG2, "${response.body()}")
-                        /* if api call is successful then alarm manager for screen off/on is called */
-                        lockTV()
+                        Toast.makeText(applicationContext, "" + response, Toast.LENGTH_LONG).show();
+
+                        if (response.body() != null) {
+                            val calendar = Calendar.getInstance()
+                            val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
+                            var fromTime = ""
+                            var toTime = ""
+
+                            if (response.body()!![day] != null && response.body()!![day].from != null) {
+                                fromTime = response.body()!![day].from
+                            }
+
+                            if (response.body()!![day] != null && response.body()!![day].to != null) {
+                                toTime = response.body()!![day].to
+                            }
+
+                            if (fromTime.isNotEmpty() && toTime.isNotEmpty()) {
+                                AppPreference(this@MainActivity).saveFromTime(
+                                    fromTime,
+                                    Constants.fromTime
+                                )
+                                AppPreference(this@MainActivity).saveToTime(
+                                    toTime,
+                                    Constants.toTime
+                                )
+                                Toast.makeText(
+                                    applicationContext,
+                                    "fromTime : $fromTime & toTime : $toTime",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                                Log.d(TAG2, "${response.body()}")
+                                /* if api call is successful then alarm manager for screen off/on is called */
+                                lockTV()
+                            }
+
+                        }
+
                     } else {
+                        Toast.makeText(
+                            applicationContext,
+                            "Failed api call",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         Log.d(TAG2, "Failed")
                     }
                 }
@@ -319,6 +373,33 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             )
             alarmManagers[i]!!.cancel(pendingIntent)
             Log.d(TAG2, "cancelled")
+        }
+    }
+
+    /*calls the api when refresh button is clicked*/
+    private fun refreshButtonCall() {
+        /* gets the local screen code and screen code from browser */
+        val localScreenCode = AppPreference(this@MainActivity).retrieveLocalScreenCode(
+            Constants.localScreenCode,
+            Constants.defaultLocalScreenCode
+        )
+        val externalCode = AppPreference(this@MainActivity).retrieveExternalScreenCode(
+            Constants.externalScreenCode,
+            Constants.defaultExternalScreenCode
+        )
+
+        /*if local screen code is not same to the external code then save the new code in preferences*/
+        if (localScreenCode != externalCode) {
+            AppPreference(this@MainActivity).saveLocalScreenCode(
+                externalCode,
+                Constants.localScreenCode
+            )
+        }
+
+        cancelMultipleAlarms() //cancels all alarms
+        callApi()//recall api to get new times after refresh
+        if (!wakeLock.isHeld) {
+            wakeLock.acquire()
         }
     }
 
@@ -424,10 +505,11 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     private fun setCacheSettings() {
         binding.webView.settings.javaScriptEnabled = true
         binding.webView.settings.domStorageEnabled = true
-        binding.webView.settings.cacheMode = WebSettings.LOAD_DEFAULT
+        binding.webView.settings.databaseEnabled = true
+//        binding.webView.settings.cacheMode = WebSettings.LOAD_DEFAULT
 
-        if (!isNetworkAvailable(this))  //offline
-            binding.webView.settings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+//        if (!isNetworkAvailable(this))  //offline
+//            binding.webView.settings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
 
         binding.webView.loadUrl(
             AppPreference(this@MainActivity).retrieveValueByKey(
@@ -502,11 +584,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             }
 
             btRefresh.setOnClickListener {
-                cancelMultipleAlarms() //cancels all alarms
-                callApi()//recall api to get new times after refresh
-                if (!wakeLock.isHeld) {
-                    wakeLock.acquire()
-                }
+                refreshButtonCall()
             }
         }
     }
