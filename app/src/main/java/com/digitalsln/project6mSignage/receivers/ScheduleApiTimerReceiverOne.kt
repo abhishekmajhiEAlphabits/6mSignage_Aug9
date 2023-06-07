@@ -21,12 +21,12 @@ class ScheduleApiTimerReceiverOne : BroadcastReceiver() {
         call.callApi()
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val i = Intent(context, ScheduleApiTimerReceiverTwo::class.java)
-        val pi = PendingIntent.getBroadcast(context, 0, i, 0);
+        val pi = PendingIntent.getBroadcast(context, 0, i, 0)
         val futureDate: Calendar = Calendar.getInstance()
         Log.d("TvTimer","inside api 1 :: ${futureDate.time}")
         futureDate.add(Calendar.HOUR_OF_DAY, 24)
         Log.d("TvTimer","${futureDate.time}")
-        am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
+        am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
     }
 
 }

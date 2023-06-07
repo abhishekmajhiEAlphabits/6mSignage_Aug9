@@ -6,11 +6,14 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import com.digitalsln.project6mSignage.ForegroundService
 import com.digitalsln.project6mSignage.receivers.DisplayOverlayReceiver
 import com.digitalsln.project6mSignage.MainActivity
+import com.digitalsln.project6mSignage.Window
 import com.digitalsln.project6mSignage.model.TimeData
 import com.digitalsln.project6mSignage.tvLauncher.utilities.AppPreference
 import com.digitalsln.project6mSignage.tvLauncher.utilities.Constants
@@ -26,13 +29,18 @@ import javax.inject.Singleton
 class ApiCall(context: Context) {
     private val TAG = "TvTimer"
     val context = context
+    private var window: Window? = null
     fun callApi() {
         var localScreenCode = AppPreference(context).retrieveLocalScreenCode(
             Constants.localScreenCode,
             Constants.defaultLocalScreenCode
         )
 
-        Toast.makeText(context,"Screen Code From App Preference :: $localScreenCode",Toast.LENGTH_LONG).show()
+        Toast.makeText(
+            context,
+            "Screen Code From App Preference :: $localScreenCode",
+            Toast.LENGTH_LONG
+        ).show()
         ApiClient.client().create(ApiInterface::class.java)
             .getTime(localScreenCode).enqueue(object : Callback<List<TimeData>> {
                 @RequiresApi(Build.VERSION_CODES.O)
@@ -41,23 +49,23 @@ class ApiCall(context: Context) {
                     response: Response<List<TimeData>>
                 ) {
                     if (response.isSuccessful) {
-                        Toast.makeText(context,""+response,Toast.LENGTH_LONG).show();
+                        Toast.makeText(context, "" + response, Toast.LENGTH_LONG).show()
 
-                        if( response.body()!=null){
+                        if (response.body() != null) {
                             val calendar = Calendar.getInstance()
                             val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
-                            var fromTime  = ""
-                            var toTime = ""
+                            var fromTime = "" //fromTime - screen on time
+                            var toTime = ""  //toTime - screen off time
 
-                            if(response.body()!![day]!=null && response.body()!![day].from!=null){
-                                toTime = response.body()!![day].from;
+                            if (response.body()!![day] != null && response.body()!![day].from != null) {
+                                fromTime = response.body()!![day].from
                             }
 
-                            if(response.body()!![day]!=null && response.body()!![day].to!=null){
-                                fromTime = response.body()!![day].to;
+                            if (response.body()!![day] != null && response.body()!![day].to != null) {
+                                toTime = response.body()!![day].to
                             }
 
-                            if(fromTime.isNotEmpty() && toTime.isNotEmpty()){
+                            if (fromTime.isNotEmpty() && toTime.isNotEmpty()) {
                                 AppPreference(context).saveFromTime(
                                     fromTime,
                                     Constants.fromTime
@@ -98,47 +106,58 @@ class ApiCall(context: Context) {
     @SuppressLint("InvalidWakeLockTag", "ShortAlarm")
     private fun lockTV() {
         try {
-            if (MainActivity.wakeLock.isHeld) {
-                Log.d(TAG, "${MainActivity.wakeLock.isHeld}")
-                MainActivity.wakeLock.release()
-            }
             MainActivity.isTimerSet = true
             /* initializes and schedules alarm manager for performing screen off and on */
-            val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val i = Intent(context, DisplayOverlayReceiver::class.java)
-            val pi = PendingIntent.getBroadcast(context, 0, i, 0);
-
-
-
-
+//            val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+//            val i = Intent(context, DisplayOverlayReceiver::class.java)
+//            val pi = PendingIntent.getBroadcast(context, 0, i, 0);
             val futureDate: Calendar = Calendar.getInstance()
-            val fromTime =
-                AppPreference(context).retrieveFromTime(
-                    Constants.fromTime,
-                    Constants.defaultFromTime
-                )
-            val cal = Calendar.getInstance()
-            val sdf = SimpleDateFormat("HH:mm:ss")
-            val date: Date = sdf.parse(fromTime) //give the fromTime here
-            cal.time = date
-            /* gets the time from api and compares it with system current time */
-            val apiTime =
-                cal[Calendar.HOUR_OF_DAY] * 3600 + cal[Calendar.MINUTE] * 60 + cal[Calendar.SECOND]
+
+            var apiFromTime = getApiFromTime()
+            var apiToTime = getApiToTime()
+
+            /* gets the times from api and compares it with system current time */
+            val calApiFromTime =
+                apiFromTime[Calendar.HOUR_OF_DAY] * 3600 + apiFromTime[Calendar.MINUTE] * 60 + apiFromTime[Calendar.SECOND]
+            val calApiToTime =
+                apiToTime[Calendar.HOUR_OF_DAY] * 3600 + apiToTime[Calendar.MINUTE] * 60 + apiToTime[Calendar.SECOND]
             val systemCurrentTime =
                 futureDate[Calendar.HOUR_OF_DAY] * 3600 + futureDate[Calendar.MINUTE] * 60 + futureDate[Calendar.SECOND]
             Log.d(
-                TAG, "$apiTime :: $systemCurrentTime"
+                TAG, "$calApiFromTime :: $calApiToTime :: $systemCurrentTime"
             )
-            /* if time from api is greater than system time then only schedules the alarm */
-            if (apiTime > systemCurrentTime) {
+
+            var hrs = futureDate[Calendar.HOUR_OF_DAY]
+            var mins = futureDate[Calendar.MINUTE]
+            var secs = futureDate[Calendar.SECOND]
+            Toast.makeText(
+                context,
+                "Current Hours :: $hrs && Current Mins : $mins && Current secs : $secs",
+                Toast.LENGTH_LONG
+            ).show()
+
+            /* if times from api is greater than system time then only schedules the alarm */
+            if (calApiFromTime > systemCurrentTime || calApiToTime > systemCurrentTime) {
+                var cal: Calendar? = null
+                if (calApiFromTime > systemCurrentTime) {
+                    cal = apiFromTime
+                } else if (calApiToTime > systemCurrentTime) {
+                    cal = apiToTime
+                } else {
+                    cal = apiFromTime
+                }
                 Log.d(
                     TAG,
-                    "${cal[Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
+                    "${cal!!.get(Calendar.HOUR_OF_DAY)} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
                 )
-                futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
-                futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
-                futureDate.set(Calendar.SECOND, cal[Calendar.SECOND])
-                am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
+
+                /* starts service to initiate handle screen on/off*/
+                startService()
+
+//                futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
+//                futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
+//                futureDate.set(Calendar.SECOND, cal[Calendar.SECOND])
+//                am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
             } else {
                 if (!MainActivity.wakeLock.isHeld) {
                     MainActivity.wakeLock.acquire()
@@ -150,6 +169,57 @@ class ApiCall(context: Context) {
                 "Permissions not granted",
                 Toast.LENGTH_SHORT
             ).show()
+        }
+    }
+
+    /* returns api param fromTime in Calendar format*/
+    private fun getApiFromTime(): Calendar {
+        val fromTime =
+            AppPreference(context).retrieveFromTime(
+                Constants.fromTime,
+                Constants.defaultFromTime
+            )
+        val cal = Calendar.getInstance()
+        val sdf = SimpleDateFormat("HH:mm:ss")
+        val date: Date = sdf.parse(fromTime) //give the fromTime here
+        cal.time = date
+        return cal
+    }
+
+    /* returns api param toTime in Calendar format*/
+    private fun getApiToTime(): Calendar {
+        val toTime =
+            AppPreference(context).retrieveFromTime(
+                Constants.toTime,
+                Constants.defaultToTime
+            )
+        val cal = Calendar.getInstance()
+        val sdf = SimpleDateFormat("HH:mm:ss")
+        val date: Date = sdf.parse(toTime) //give the toTime here
+        cal.time = date
+        return cal
+    }
+
+    /*service to start alarm manager for screen on/off*/
+    private fun startService() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // check if the user has already granted
+            // the Draw over other apps permission
+            if (Settings.canDrawOverlays(context)) {
+                // start the service based on the android version
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(
+                        Intent(
+                            context,
+                            ForegroundService::class.java
+                        )
+                    )
+                } else {
+                    context.startService(Intent(context, ForegroundService::class.java))
+                }
+            }
+        } else {
+            context.startService(Intent(context, ForegroundService::class.java))
         }
     }
 }

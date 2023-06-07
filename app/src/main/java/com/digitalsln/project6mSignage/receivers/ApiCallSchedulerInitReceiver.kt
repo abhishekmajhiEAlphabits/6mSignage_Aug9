@@ -16,7 +16,7 @@ class ApiCallSchedulerInitReceiver:BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val i = Intent(context, ScheduleApiTimerReceiverOne::class.java)
-        val pi = PendingIntent.getBroadcast(context, 0, i, 0);
+        val pi = PendingIntent.getBroadcast(context, 0, i, 0)
         val futureDate: Calendar = Calendar.getInstance()
         Log.d("TvTimer","inside int :: ${futureDate.time}")
         futureDate.add(Calendar.HOUR_OF_DAY, 2)
@@ -26,6 +26,6 @@ class ApiCallSchedulerInitReceiver:BroadcastReceiver() {
             "starting api scheduler...",
             Toast.LENGTH_SHORT
         ).show()
-        am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
+        am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
     }
 }

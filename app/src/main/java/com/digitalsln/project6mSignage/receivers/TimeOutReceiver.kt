@@ -17,12 +17,14 @@ class TimeOutReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val value = AppPreference(context).retrieveDefaultTimeOut(Constants.timeOut,Constants.defaultTimeOut)
         if ((context.getSystemService(Context.POWER_SERVICE) as PowerManager).isInteractive) {
+            Log.d(TAG, "inside timeout receiver is interactive:$value")
             Settings.System.putString(
                 context.contentResolver,
                 Settings.System.SCREEN_OFF_TIMEOUT,
                 value
             )
         } else {
+            Log.d(TAG, "inside timeout receiver NOT interactive :$value")
             Settings.System.putString(
                 context.contentResolver,
                 Settings.System.SCREEN_OFF_TIMEOUT,

@@ -6,14 +6,21 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import android.view.*
 import android.widget.Toast
 import com.digitalsln.project6mSignage.receivers.ShutDownReceiver
+import com.digitalsln.project6mSignage.receivers.TimeOutReceiver
+import com.digitalsln.project6mSignage.receivers.WakeUpReceiver
+import com.digitalsln.project6mSignage.tvLauncher.utilities.AppPreference
+import com.digitalsln.project6mSignage.tvLauncher.utilities.Constants
+import java.text.SimpleDateFormat
 import java.util.*
 
 /**
  * overlay screen to show on turn off countdown
+ * and also handle screen on
  */
 class Window(context: Context) {
 
@@ -23,8 +30,7 @@ class Window(context: Context) {
     private var mParams: WindowManager.LayoutParams? = null
     private var mWindowManager: WindowManager? = null
     private var layoutInflater: LayoutInflater? = null
-    private var am: AlarmManager? = null
-    private var pi: PendingIntent? = null
+    private val TAG = "TvTimer"
 
     init {
         this.context = context
@@ -58,20 +64,11 @@ class Window(context: Context) {
             if (mView!!.windowToken == null) {
                 if (mView!!.parent == null) {
                     mWindowManager!!.addView(mView, mParams)
-                    try {
-                        am = context!!.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-                        val i = Intent(context, ShutDownReceiver::class.java)
-                        pi = PendingIntent.getBroadcast(context, 0, i, 0)
-                        val futureDate = Calendar.getInstance()
-                        futureDate.add(Calendar.SECOND, 10)
-                        am!!.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
-                    } catch (e: Exception) {
-                        Toast.makeText(
-                            context,
-                            "Failed to start display popup",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+                    // call to turn off screen
+                    turnOffScreen()
+
+                    //call to turn on screen
+                    turnOnScreen()
                 }
             }
             val timerObj = Timer()
@@ -87,7 +84,7 @@ class Window(context: Context) {
         }
     }
 
-    fun close() {
+    private fun close() {
         try {
             // remove the view from the window
             (context!!.getSystemService(Context.WINDOW_SERVICE) as WindowManager).removeView(mView)
@@ -100,6 +97,85 @@ class Window(context: Context) {
             // the view simultaneously, it might give some exceptions
         } catch (e: Exception) {
             Log.d("Error2", e.toString())
+        }
+    }
+
+    /*turns screen off at set time*/
+    private fun turnOffScreen() {
+        try {
+            val am = context!!.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val i = Intent(context, ShutDownReceiver::class.java)
+            val pi = PendingIntent.getBroadcast(context, 0, i, 0)
+            val futureDate: Calendar = Calendar.getInstance()
+            val toTime =
+                AppPreference(context!!).retrieveToTime(
+                    Constants.toTime,
+                    Constants.defaultToTime
+                )
+            val cal = Calendar.getInstance()
+            val sdf = SimpleDateFormat("HH:mm:ss")
+            val date: Date = sdf.parse(toTime) //give the toTime here
+            cal.time = date
+            val apiTime =
+                cal[Calendar.HOUR_OF_DAY] * 3600 + cal[Calendar.MINUTE] * 60 + cal[Calendar.SECOND]
+            val systemCurrentTime =
+                futureDate[Calendar.HOUR_OF_DAY] * 3600 + futureDate[Calendar.MINUTE] * 60 + futureDate[Calendar.SECOND]
+            Log.d(
+                TAG, "$apiTime :: $systemCurrentTime"
+            )
+            if (apiTime > systemCurrentTime) {
+                Log.d(
+                    TAG,
+                    "${cal[Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
+                )
+                futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
+                futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
+                futureDate.set(Calendar.SECOND, cal[Calendar.SECOND] - 10)
+                am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
+            }
+        } catch (e: Exception) {
+            Toast.makeText(
+                context,
+                "Failed to start display popup",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    /*turns screen on at set time*/
+    private fun turnOnScreen() {
+        try {
+            val am = context!!.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            val i = Intent(context, WakeUpReceiver::class.java)
+            val pi = PendingIntent.getBroadcast(context, 0, i, 0)
+            val futureDate: Calendar = Calendar.getInstance()
+            val fromTime = AppPreference(context!!).retrieveToTime(
+                Constants.fromTime,
+                Constants.defaultFromTime
+            )
+            val cal = Calendar.getInstance()
+            val sdf = SimpleDateFormat("HH:mm:ss")
+            val date: Date = sdf.parse(fromTime) //give the fromTime here
+            cal.time = date
+            val apiTime =
+                cal[Calendar.HOUR_OF_DAY] * 3600 + cal[Calendar.MINUTE] * 60 + cal[Calendar.SECOND]
+            val systemCurrentTime =
+                futureDate[Calendar.HOUR_OF_DAY] * 3600 + futureDate[Calendar.MINUTE] * 60 + futureDate[Calendar.SECOND]
+            Log.d(
+                TAG, "$apiTime :: $systemCurrentTime"
+            )
+            if (apiTime > systemCurrentTime) {
+                Log.d(
+                    TAG,
+                    "${cal[Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
+                )
+                futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
+                futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
+                futureDate.set(Calendar.SECOND, cal[Calendar.SECOND])
+                am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
+            }
+        } catch (e: Exception) {
+            Log.d(TAG, "wake up alarm failed")
         }
     }
 }
