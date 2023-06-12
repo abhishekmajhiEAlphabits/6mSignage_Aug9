@@ -1,19 +1,18 @@
 package com.digitalsln.project6mSignage.network
 
 import android.annotation.SuppressLint
-import android.app.AlarmManager
-import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import com.digitalsln.project6mSignage.ForegroundService
-import com.digitalsln.project6mSignage.receivers.DisplayOverlayReceiver
 import com.digitalsln.project6mSignage.MainActivity
-import com.digitalsln.project6mSignage.Window
 import com.digitalsln.project6mSignage.model.TimeData
 import com.digitalsln.project6mSignage.tvLauncher.utilities.AppPreference
 import com.digitalsln.project6mSignage.tvLauncher.utilities.Constants
@@ -21,85 +20,103 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.text.SimpleDateFormat
-import java.time.LocalDateTime
 import java.util.*
 import javax.inject.Singleton
+
 
 @Singleton
 class ApiCall(context: Context) {
     private val TAG = "TvTimer"
     val context = context
-    private var window: Window? = null
+
     fun callApi() {
-        var localScreenCode = AppPreference(context).retrieveLocalScreenCode(
-            Constants.localScreenCode,
-            Constants.defaultLocalScreenCode
-        )
+//        if(isInternetConnected()){
+//
+//        }
+//        else{
+//            Toast.makeText(context, "No Internet Connection", Toast.LENGTH_LONG).show()
+//            Log.d(TAG, "No internet")
+//        }
+        try {
+            var localScreenCode = AppPreference(context).retrieveLocalScreenCode(
+                Constants.localScreenCode,
+                Constants.defaultLocalScreenCode
+            )
 
-        Toast.makeText(
-            context,
-            "Screen Code From App Preference :: $localScreenCode",
-            Toast.LENGTH_LONG
-        ).show()
-        ApiClient.client().create(ApiInterface::class.java)
-            .getTime(localScreenCode).enqueue(object : Callback<List<TimeData>> {
-                @RequiresApi(Build.VERSION_CODES.O)
-                override fun onResponse(
-                    call: Call<List<TimeData>>,
-                    response: Response<List<TimeData>>
-                ) {
-                    if (response.isSuccessful) {
-                        Toast.makeText(context, "" + response, Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                context,
+                "Screen Code From App Preference :: $localScreenCode",
+                Toast.LENGTH_LONG
+            ).show()
+            ApiClient.client().create(ApiInterface::class.java)
+                .getTime(localScreenCode).enqueue(object : Callback<List<TimeData>> {
+                    @RequiresApi(Build.VERSION_CODES.O)
+                    override fun onResponse(
+                        call: Call<List<TimeData>>,
+                        response: Response<List<TimeData>>
+                    ) {
+                        if (response.isSuccessful) {
+                            Toast.makeText(context, "" + response, Toast.LENGTH_LONG).show()
 
-                        if (response.body() != null) {
-                            val calendar = Calendar.getInstance()
-                            val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
-                            var fromTime = "" //fromTime - screen on time
-                            var toTime = ""  //toTime - screen off time
+                            if (response.body() != null) {
+                                val calendar = Calendar.getInstance()
+                                val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
+                                var fromTime = "" //fromTime - screen on time
+                                var toTime = ""  //toTime - screen off time
 
-                            if (response.body()!![day] != null && response.body()!![day].from != null) {
-                                fromTime = response.body()!![day].from
+                                if (response.body()!![day] != null && response.body()!![day].from != null) {
+                                    fromTime = response.body()!![day].from
+                                }
+
+                                if (response.body()!![day] != null && response.body()!![day].to != null) {
+                                    toTime = response.body()!![day].to
+                                }
+
+                                if (fromTime.isNotEmpty() && toTime.isNotEmpty()) {
+                                    AppPreference(context).saveFromTime(
+                                        fromTime,
+                                        Constants.fromTime
+                                    )
+                                    AppPreference(context).saveToTime(
+                                        toTime,
+                                        Constants.toTime
+                                    )
+                                    Toast.makeText(
+                                        context,
+                                        "fromTime : $fromTime & toTime : $toTime",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                    Log.d(TAG, "${response.body()}")
+                                    if (validTime(fromTime) && validTime(toTime)) {
+                                        /* if api call is successful then alarm manager for screen off/on is called */
+                                        lockTV()
+                                    } else {
+                                        Toast.makeText(
+                                            context,
+                                            "Invalid Time",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
                             }
 
-                            if (response.body()!![day] != null && response.body()!![day].to != null) {
-                                toTime = response.body()!![day].to
-                            }
-
-                            if (fromTime.isNotEmpty() && toTime.isNotEmpty()) {
-                                AppPreference(context).saveFromTime(
-                                    fromTime,
-                                    Constants.fromTime
-                                )
-                                AppPreference(context).saveToTime(
-                                    toTime,
-                                    Constants.toTime
-                                )
-                                Toast.makeText(
-                                    context,
-                                    "fromTime : $fromTime & toTime : $toTime",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                Log.d(TAG, "${response.body()}")
-                                /* if api call is successful then alarm manager for screen off/on is called */
-                                lockTV()
-                            }
-
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "Failed api call",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            Log.d(TAG, "Failed")
                         }
-
-                    } else {
-                        Toast.makeText(
-                            context,
-                            "Failed api call",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        Log.d(TAG, "Failed")
                     }
-                }
 
-                override fun onFailure(call: Call<List<TimeData>>, t: Throwable) {
-                    Log.d(TAG, "$t")
-                }
-            })
+                    override fun onFailure(call: Call<List<TimeData>>, t: Throwable) {
+                        Log.d(TAG, "$t")
+                    }
+                })
+        } catch (e: Exception) {
+            Log.d(TAG, "$e")
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -166,9 +183,42 @@ class ApiCall(context: Context) {
         } catch (e: Exception) {
             Toast.makeText(
                 context,
-                "Permissions not granted",
+                "Lock failed",
                 Toast.LENGTH_SHORT
             ).show()
+        }
+    }
+
+    // Function to validate the
+    // Traditional Time Formats (HH:MM:SS)
+    private fun validTime(str: String): Boolean {
+        // Regex to check valid
+        // Traditional Time Formats
+        // (HH:MM:SS  or HH:MM).
+        var pattern = "^(?:[01]\\d|2[0123]):(?:[012345]\\d):(?:[012345]\\d)$"
+
+        // If the str
+        // is empty return false
+        if (str.isEmpty()) {
+            return false
+        }
+
+        // Return true if the str
+        // matched the ReGex
+        return str.matches(pattern.toRegex())
+    }
+
+    private fun isInternetConnected() : Boolean{
+        val cm = context.getSystemService(AppCompatActivity.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val currentnetwork = cm.activeNetwork
+        if (currentnetwork != null) {
+            return cm.getNetworkCapabilities(currentnetwork)!!
+                .hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) && cm.getNetworkCapabilities(
+                currentnetwork
+            )!!
+                .hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        } else {
+            return false
         }
     }
 

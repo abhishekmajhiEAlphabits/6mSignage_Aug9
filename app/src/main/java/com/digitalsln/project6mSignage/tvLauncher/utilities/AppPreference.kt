@@ -92,4 +92,6 @@ class AppPreference(context: Context) {
         sharedPreference!!.edit().putBoolean("FIRST_RUN", flag).apply()
     }
 
+
+
 }

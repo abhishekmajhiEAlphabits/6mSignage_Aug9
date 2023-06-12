@@ -19,9 +19,16 @@ class WakeUpReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         Log.d(TAG, "inside wakeup receiver")
 
-        if (!MainActivity.wakeLock.isHeld) {
-            MainActivity.wakeLock.acquire()
-        }
+        powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = powerManager.newWakeLock(
+            PowerManager.FULL_WAKE_LOCK or
+                    PowerManager.ACQUIRE_CAUSES_WAKEUP or
+                    PowerManager.ON_AFTER_RELEASE, "appname::WakeLock"
+        )
+        wakeLock.acquire()
+
+        Log.d(TAG, "now acuire command")
+
 //        wakeLock.release()
     }
 }

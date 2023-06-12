@@ -31,11 +31,13 @@ class ShutDownReceiver : BroadcastReceiver() {
             if (MainActivity.wakeLock.isHeld) {
                 MainActivity.wakeLock.release()
             }
+
             Settings.System.putString(
                 context!!.contentResolver,
                 Settings.System.SCREEN_OFF_TIMEOUT,
                 "0"
             )  //setting screen_timeout to 10sec
+
             val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val i = Intent(context, TimeOutReceiver::class.java)
             val pi = PendingIntent.getBroadcast(context, 0, i, 0)

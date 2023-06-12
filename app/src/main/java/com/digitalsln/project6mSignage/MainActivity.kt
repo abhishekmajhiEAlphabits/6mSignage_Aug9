@@ -8,6 +8,8 @@ import android.app.PendingIntent
 import android.content.*
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -26,7 +28,6 @@ import com.digitalsln.project6mSignage.databinding.ActivityMainBinding
 import com.digitalsln.project6mSignage.databinding.HandMadeStartAppDialogBinding
 import com.digitalsln.project6mSignage.databinding.PlayModeDialogBinding
 import com.digitalsln.project6mSignage.model.TimeData
-import com.digitalsln.project6mSignage.network.ApiCall
 import com.digitalsln.project6mSignage.network.ApiClient
 import com.digitalsln.project6mSignage.network.ApiInterface
 import com.digitalsln.project6mSignage.receivers.*
@@ -38,7 +39,6 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.text.SimpleDateFormat
-import java.time.LocalDateTime
 import java.util.*
 
 
@@ -58,7 +58,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     private val binding get() = _binding!!
     private var defaultValue: String? = null
     private lateinit var powerManager: PowerManager
-    private var window: Window? = null
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -161,15 +160,15 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     }
 
     @SuppressLint("InvalidWakeLockTag", "ShortAlarm")
-    private fun lockTV() {
+    private fun lockTV(day: Int) {
         try {
             isTimerSet = true
 
             val futureDate: Calendar = Calendar.getInstance()
 
             /* gets the times from api and compares it with system current time */
-            var apiFromTime = getApiFromTime()
-            var apiToTime = getApiToTime()
+            var apiFromTime = getApiFromTime(day)
+            var apiToTime = getApiToTime(day)
             val calApiFromTime =
                 apiFromTime[Calendar.HOUR_OF_DAY] * 3600 + apiFromTime[Calendar.MINUTE] * 60 + apiFromTime[Calendar.SECOND]
             val calApiToTime =
@@ -216,17 +215,18 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         } catch (e: Exception) {
             Toast.makeText(
                 this,
-                "Permissions not granted",
+                "Lock failed",
                 Toast.LENGTH_SHORT
             ).show()
         }
     }
 
     /* returns api param fromTime in Calendar format*/
-    private fun getApiFromTime(): Calendar {
+    private fun getApiFromTime(day: Int): Calendar {
+        var dayName = getWeekDay(day)
         val fromTime =
             AppPreference(this@MainActivity).retrieveFromTime(
-                Constants.fromTime,
+                "$dayName-${Constants.fromTime}",
                 Constants.defaultFromTime
             )
         val cal = Calendar.getInstance()
@@ -237,10 +237,11 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     }
 
     /* returns api param toTime in Calendar format*/
-    private fun getApiToTime(): Calendar {
+    private fun getApiToTime(day: Int): Calendar {
+        var dayName = getWeekDay(day)
         val toTime =
             AppPreference(this@MainActivity).retrieveFromTime(
-                Constants.toTime,
+                "$dayName-${Constants.toTime}",
                 Constants.defaultToTime
             )
         val cal = Calendar.getInstance()
@@ -275,47 +276,51 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
     /* starts scheduler for calling the api everyday at scheduled time */
     private fun startScheduler() {
-        if (!wakeLock.isHeld) {
-            wakeLock.acquire()
-        }
+        try {
+            if (!wakeLock.isHeld) {
+                wakeLock.acquire()
+            }
 
-        /* gets the local screen code and screen code from browser */
-        val localScreenCode = AppPreference(this@MainActivity).retrieveLocalScreenCode(
-            Constants.localScreenCode,
-            Constants.defaultLocalScreenCode
-        )
-        val externalCode = AppPreference(this@MainActivity).retrieveExternalScreenCode(
-            Constants.externalScreenCode,
-            Constants.defaultExternalScreenCode
-        )
-
-        /* checks if the app is run first time */
-        val isFirstRun = AppPreference(this@MainActivity).isFirstTimeRun()
-        if (isFirstRun) {
-            /* runs on first run of the app after install and starts the function to call the api everyday */
-            AppPreference(this@MainActivity).saveLocalScreenCode(
-                externalCode,
-                Constants.localScreenCode
+            /* gets the local screen code and screen code from browser */
+            val localScreenCode = AppPreference(this@MainActivity).retrieveLocalScreenCode(
+                Constants.localScreenCode,
+                Constants.defaultLocalScreenCode
+            )
+            val externalCode = AppPreference(this@MainActivity).retrieveExternalScreenCode(
+                Constants.externalScreenCode,
+                Constants.defaultExternalScreenCode
             )
 
-            //alarm manager for everyday api hit timer after every 24hrs
-            scheduleApiCallTimer()
-            callApi()
-            AppPreference(this@MainActivity).setFirstTimeRun(false)
-        } else {
-            if (localScreenCode != externalCode) {
+            /* checks if the app is run first time */
+            val isFirstRun = AppPreference(this@MainActivity).isFirstTimeRun()
+            if (isFirstRun) {
+                /* runs on first run of the app after install and starts the function to call the api everyday */
                 AppPreference(this@MainActivity).saveLocalScreenCode(
                     externalCode,
                     Constants.localScreenCode
                 )
 
-                /* if saved screen code is not same to the code from the browser then cancels all the alarms and call api again */
-                cancelMultipleAlarms()
+                //alarm manager for everyday api hit timer after every 24hrs
+                scheduleApiCallTimer()
                 callApi()
+                AppPreference(this@MainActivity).setFirstTimeRun(false)
             } else {
-                Log.d(TAG2, "equal")
+                if (localScreenCode != externalCode) {
+                    AppPreference(this@MainActivity).saveLocalScreenCode(
+                        externalCode,
+                        Constants.localScreenCode
+                    )
+
+                    /* if saved screen code is not same to the code from the browser then cancels all the alarms and call api again */
+                    cancelMultipleAlarms()
+                    callApi()
+                } else {
+                    Log.d(TAG2, "equal")
+                }
+                Log.d(TAG2, "!first")
             }
-            Log.d(TAG2, "!first")
+        } catch (e: Exception) {
+            Log.d(TAG2, "$e")
         }
     }
 
@@ -333,70 +338,179 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
 
     private fun callApi() {
-        var localScreenCode = AppPreference(this@MainActivity).retrieveLocalScreenCode(
-            Constants.localScreenCode,
-            Constants.defaultLocalScreenCode
-        )
-        Toast.makeText(applicationContext, "Pref is :: $localScreenCode", Toast.LENGTH_LONG).show()
+        try {
+            var localScreenCode = AppPreference(this@MainActivity).retrieveLocalScreenCode(
+                Constants.localScreenCode,
+                Constants.defaultLocalScreenCode
+            )
+            Toast.makeText(applicationContext, "Pref is :: $localScreenCode", Toast.LENGTH_LONG)
+                .show()
 
-        ApiClient.client().create(ApiInterface::class.java)
-            .getTime(localScreenCode).enqueue(object : Callback<List<TimeData>> {
-                override fun onResponse(
-                    call: Call<List<TimeData>>,
-                    response: Response<List<TimeData>>
-                ) {
-                    if (response.isSuccessful) {
-                        Toast.makeText(applicationContext, "" + response, Toast.LENGTH_LONG).show()
+            ApiClient.client().create(ApiInterface::class.java)
+                .getTime("622946").enqueue(object : Callback<List<TimeData>> {
+                    override fun onResponse(
+                        call: Call<List<TimeData>>,
+                        response: Response<List<TimeData>>
+                    ) {
+                        if (response.isSuccessful) {
+                            Toast.makeText(applicationContext, "" + response, Toast.LENGTH_LONG)
+                                .show()
 
-                        if (response.body() != null) {
-                            val calendar = Calendar.getInstance()
-                            val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
-                            var fromTime = "" //fromTime - screen on time
-                            var toTime = ""  //toTime - screen off time
+                            if (response.body() != null) {
+                                val calendar = Calendar.getInstance()
+                                val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
+                                var fromTime = "" //fromTime - screen on time
+                                var toTime = ""  //toTime - screen off time
 
-                            if (response.body()!![day] != null && response.body()!![day].from != null) {
-                                fromTime = response.body()!![day].from
-                            }
+                                for (i in 0..5) {
+                                    var fromTime = "" //fromTime - screen on time
+                                    var toTime = ""  //toTime - screen off time
+                                    if (response.body()!![day].day != null) {
+                                        var dayName = getWeekDay(response.body()!![day].day)
+                                        if (response.body()!![day] != null && response.body()!![day].from != null) {
+                                            fromTime = response.body()!![day].from
+                                        }
 
-                            if (response.body()!![day] != null && response.body()!![day].to != null) {
-                                toTime = response.body()!![day].to
-                            }
-
-                            if (fromTime.isNotEmpty() && toTime.isNotEmpty()) {
-                                AppPreference(this@MainActivity).saveFromTime(
-                                    fromTime,
-                                    Constants.fromTime
-                                )
-                                AppPreference(this@MainActivity).saveToTime(
-                                    toTime,
-                                    Constants.toTime
-                                )
-                                Toast.makeText(
-                                    applicationContext,
-                                    "fromTime : $fromTime & toTime : $toTime",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                Log.d(TAG2, "${response.body()}")
+                                        if (response.body()!![day] != null && response.body()!![day].to != null) {
+                                            toTime = response.body()!![day].to
+                                        }
+                                        if (fromTime.isNotEmpty() && toTime.isNotEmpty()) {
+                                            if (validTime(fromTime) && validTime(toTime)) {
+                                                AppPreference(this@MainActivity).saveFromTime(
+                                                    fromTime,
+                                                    "$dayName-${Constants.fromTime}"
+                                                )
+                                                AppPreference(this@MainActivity).saveToTime(
+                                                    toTime,
+                                                    "$dayName-${Constants.toTime}"
+                                                )
+                                                Toast.makeText(
+                                                    applicationContext,
+                                                    "fromTime : $fromTime & toTime : $toTime",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                                Log.d(TAG2, "${response.body()}")
+                                            } else {
+                                                Toast.makeText(
+                                                    applicationContext,
+                                                    "Invalid Time",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
+                                    }
+                                }
                                 /* if api call is successful then alarm manager for screen off/on is called */
-                                lockTV()
+                                lockTvDayBase()
+
+//                                Log.d(TAG2, "${response.body()!![]}")
+
+//                                if (response.body()!![day] != null && response.body()!![day].from != null) {
+//                                    fromTime = response.body()!![day].from
+//                                }
+//
+//                                if (response.body()!![day] != null && response.body()!![day].to != null) {
+//                                    toTime = response.body()!![day].to
+//                                }
+
                             }
 
+                        } else {
+                            Toast.makeText(
+                                applicationContext,
+                                "Failed api call",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            Log.d(TAG2, "Failed")
                         }
-
-                    } else {
-                        Toast.makeText(
-                            applicationContext,
-                            "Failed api call",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        Log.d(TAG2, "Failed")
                     }
-                }
 
-                override fun onFailure(call: Call<List<TimeData>>, t: Throwable) {
-                    Log.d(TAG2, "$t")
-                }
-            })
+                    override fun onFailure(call: Call<List<TimeData>>, t: Throwable) {
+                        Log.d(TAG2, "$t")
+                    }
+                })
+        } catch (e: Exception) {
+            Log.d(TAG2, "$e")
+        }
+    }
+
+    private fun lockTvDayBase() {
+        val calendar = Calendar.getInstance()
+        val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
+        /* if api call is successful then alarm manager for screen off/on is called */
+        lockTV(day)
+    }
+
+    private fun getWeekDay(day: Int): String {
+        when (day) {
+            0 -> {
+                return "Sunday"
+            }
+            1 -> {
+                return "Monday"
+            }
+            2 -> {
+                return "Tuesday"
+            }
+            3 -> {
+                return "Wednesday"
+            }
+            4 -> {
+                return "Thursday"
+            }
+            5 -> {
+                return "Friday"
+            }
+            6 -> {
+                return "Saturday"
+            }
+        }
+        return "NA"
+    }
+
+    // Function to validate the
+    // Traditional Time Formats (HH:MM:SS)
+    private fun validTime(str: String): Boolean {
+        // Regex to check valid
+        // Traditional Time Formats
+        // (HH:MM:SS  or HH:MM).
+        var pattern = "^(?:[01]\\d|2[0123]):(?:[012345]\\d):(?:[012345]\\d)$"
+
+        // If the str
+        // is empty return false
+        if (str.isEmpty()) {
+            return false
+        }
+
+        // Return true if the str
+        // matched the ReGex
+        return str.matches(pattern.toRegex())
+    }
+
+    private fun isInternetConnected(): Boolean {
+
+        // get Connectivity Manager object to check connection
+        val connec = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+        // Check for network connections
+        if (connec.getNetworkInfo(0)!!.getState() == android.net.NetworkInfo.State.CONNECTED ||
+            connec.getNetworkInfo(0)!!.getState() == android.net.NetworkInfo.State.CONNECTING ||
+            connec.getNetworkInfo(1)!!.getState() == android.net.NetworkInfo.State.CONNECTING ||
+            connec.getNetworkInfo(1)!!.getState() == android.net.NetworkInfo.State.CONNECTED
+        ) {
+
+
+            return true;
+
+        } else if (
+            connec.getNetworkInfo(0)!!.getState() == android.net.NetworkInfo.State.DISCONNECTED ||
+            connec.getNetworkInfo(1)!!.getState() == android.net.NetworkInfo.State.DISCONNECTED
+        ) {
+
+
+            return false;
+        }
+        return false;
     }
 
     /* cancels all previously scheduled alarms */
@@ -422,29 +536,34 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
     /*calls the api when refresh button is clicked*/
     private fun refreshButtonCall() {
-        /* gets the local screen code and screen code from browser */
-        val localScreenCode = AppPreference(this@MainActivity).retrieveLocalScreenCode(
-            Constants.localScreenCode,
-            Constants.defaultLocalScreenCode
-        )
-        val externalCode = AppPreference(this@MainActivity).retrieveExternalScreenCode(
-            Constants.externalScreenCode,
-            Constants.defaultExternalScreenCode
-        )
-
-        /*if local screen code is not same to the external code then save the new code in preferences*/
-        if (localScreenCode != externalCode) {
-            AppPreference(this@MainActivity).saveLocalScreenCode(
-                externalCode,
-                Constants.localScreenCode
+        try {
+            /* gets the local screen code and screen code from browser */
+            val localScreenCode = AppPreference(this@MainActivity).retrieveLocalScreenCode(
+                Constants.localScreenCode,
+                Constants.defaultLocalScreenCode
             )
+            val externalCode = AppPreference(this@MainActivity).retrieveExternalScreenCode(
+                Constants.externalScreenCode,
+                Constants.defaultExternalScreenCode
+            )
+
+            /*if local screen code is not same to the external code then save the new code in preferences*/
+            if (localScreenCode != externalCode) {
+                AppPreference(this@MainActivity).saveLocalScreenCode(
+                    externalCode,
+                    Constants.localScreenCode
+                )
+            }
+
+            cancelMultipleAlarms() //cancels all alarms
+            callApi()//recall api to get new times after refresh
+            if (!wakeLock.isHeld) {
+                wakeLock.acquire()
+            }
+        } catch (e: Exception) {
+            Log.d(TAG2, "$e")
         }
 
-        cancelMultipleAlarms() //cancels all alarms
-        callApi()//recall api to get new times after refresh
-        if (!wakeLock.isHeld) {
-            wakeLock.acquire()
-        }
     }
 
     private fun startConnecting() {
@@ -477,7 +596,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
         if (binder == null) {
             /* Bind the service if we're not bound already. After binding, the callback will
-			 * perform the initial connection. */
+             * perform the initial connection. */
             applicationContext.bindService(service, serviceConn, BIND_AUTO_CREATE)
         } else {
             /* We're already bound, so do the connect or lookup immediately */
