@@ -19,7 +19,7 @@ class ApiCallSchedulerInitReceiver:BroadcastReceiver() {
         val pi = PendingIntent.getBroadcast(context, 0, i, 0)
         val futureDate: Calendar = Calendar.getInstance()
         Log.d("TvTimer","inside int :: ${futureDate.time}")
-        futureDate.add(Calendar.HOUR_OF_DAY, 2)
+        futureDate.add(Calendar.MINUTE, 5)
         Log.d("TvTimer","${futureDate.time}")
         Toast.makeText(
             context,

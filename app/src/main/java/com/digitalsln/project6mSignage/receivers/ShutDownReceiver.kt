@@ -8,6 +8,7 @@ import android.content.Intent
 import android.provider.Settings
 import android.util.Log
 import com.digitalsln.project6mSignage.MainActivity
+import com.digitalsln.project6mSignage.appUtils.TimerHelpers
 import com.digitalsln.project6mSignage.tvLauncher.utilities.AppPreference
 import com.digitalsln.project6mSignage.tvLauncher.utilities.Constants
 import java.text.SimpleDateFormat
@@ -19,7 +20,9 @@ import java.util.*
  */
 class ShutDownReceiver : BroadcastReceiver() {
     private val TAG = "TvTimer"
+    private lateinit var timerHelpers: TimerHelpers
     override fun onReceive(context: Context, intent: Intent) {
+        timerHelpers = TimerHelpers(context)
         setTimeOut(context)
     }
 
@@ -42,8 +45,7 @@ class ShutDownReceiver : BroadcastReceiver() {
             val i = Intent(context, TimeOutReceiver::class.java)
             val pi = PendingIntent.getBroadcast(context, 0, i, 0)
             val futureDate: Calendar = Calendar.getInstance()
-            val toTime =
-                AppPreference(context).retrieveToTime(Constants.fromTime, Constants.defaultFromTime)
+            val toTime = timerHelpers.getApiToTimePreferences(timerHelpers.getWeekDayInInt())
             val cal = Calendar.getInstance()
             val sdf = SimpleDateFormat("HH:mm:ss")
             val date: Date = sdf.parse(toTime) //give the toTime here

@@ -10,6 +10,7 @@ import android.provider.Settings
 import android.util.Log
 import android.view.*
 import android.widget.Toast
+import com.digitalsln.project6mSignage.appUtils.TimerHelpers
 import com.digitalsln.project6mSignage.receivers.ShutDownReceiver
 import com.digitalsln.project6mSignage.receivers.TimeOutReceiver
 import com.digitalsln.project6mSignage.receivers.WakeUpReceiver
@@ -30,6 +31,7 @@ class Window(context: Context) {
     private var mParams: WindowManager.LayoutParams? = null
     private var mWindowManager: WindowManager? = null
     private var layoutInflater: LayoutInflater? = null
+    private lateinit var timerHelpers: TimerHelpers
     private val TAG = "TvTimer"
 
     init {
@@ -55,6 +57,7 @@ class Window(context: Context) {
         // window within the screen
         mParams!!.gravity = Gravity.CENTER
         mWindowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+        timerHelpers = TimerHelpers(context)
     }
 
     fun open() {
@@ -107,11 +110,7 @@ class Window(context: Context) {
             val i = Intent(context, ShutDownReceiver::class.java)
             val pi = PendingIntent.getBroadcast(context, 0, i, 0)
             val futureDate: Calendar = Calendar.getInstance()
-            val toTime =
-                AppPreference(context!!).retrieveToTime(
-                    Constants.toTime,
-                    Constants.defaultToTime
-                )
+            val toTime = timerHelpers.getApiToTimePreferences(timerHelpers.getWeekDayInInt())
             val cal = Calendar.getInstance()
             val sdf = SimpleDateFormat("HH:mm:ss")
             val date: Date = sdf.parse(toTime) //give the toTime here
@@ -149,10 +148,7 @@ class Window(context: Context) {
             val i = Intent(context, WakeUpReceiver::class.java)
             val pi = PendingIntent.getBroadcast(context, 0, i, 0)
             val futureDate: Calendar = Calendar.getInstance()
-            val fromTime = AppPreference(context!!).retrieveToTime(
-                Constants.fromTime,
-                Constants.defaultFromTime
-            )
+            val fromTime = timerHelpers.getApiFromTimePreferences(timerHelpers.getWeekDayInInt())
             val cal = Calendar.getInstance()
             val sdf = SimpleDateFormat("HH:mm:ss")
             val date: Date = sdf.parse(fromTime) //give the fromTime here

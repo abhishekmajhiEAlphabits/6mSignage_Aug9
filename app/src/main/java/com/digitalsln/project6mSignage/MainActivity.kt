@@ -9,7 +9,6 @@ import android.content.*
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -24,6 +23,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.isVisible
 import com.cgutman.adblib.AdbCrypto
+import com.digitalsln.project6mSignage.appUtils.TimerHelpers
 import com.digitalsln.project6mSignage.databinding.ActivityMainBinding
 import com.digitalsln.project6mSignage.databinding.HandMadeStartAppDialogBinding
 import com.digitalsln.project6mSignage.databinding.PlayModeDialogBinding
@@ -38,7 +38,6 @@ import com.digitalsln.project6mSignage.tvLauncher.utilities.Utils.isNetworkAvail
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.text.SimpleDateFormat
 import java.util.*
 
 
@@ -58,6 +57,8 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     private val binding get() = _binding!!
     private var defaultValue: String? = null
     private lateinit var powerManager: PowerManager
+    private lateinit var timerHelpers: TimerHelpers
+    private lateinit var networkChangeReceiver: NetworkChangeReceiver
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -101,6 +102,10 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                         PowerManager.ON_AFTER_RELEASE, "appname::WakeLock"
             )
             wakeLock.acquire()
+
+            timerHelpers = TimerHelpers(applicationContext)
+            networkChangeReceiver = NetworkChangeReceiver()
+            registerNetworkBroadcastForNougat()
 
 
             /* Fetches the screen code from the browser localStorage and stores in preferences */
@@ -167,8 +172,8 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             val futureDate: Calendar = Calendar.getInstance()
 
             /* gets the times from api and compares it with system current time */
-            var apiFromTime = getApiFromTime(day)
-            var apiToTime = getApiToTime(day)
+            var apiFromTime = timerHelpers.getApiFromTime(day)
+            var apiToTime = timerHelpers.getApiToTime(day)
             val calApiFromTime =
                 apiFromTime[Calendar.HOUR_OF_DAY] * 3600 + apiFromTime[Calendar.MINUTE] * 60 + apiFromTime[Calendar.SECOND]
             val calApiToTime =
@@ -200,7 +205,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 }
                 Log.d(
                     TAG2,
-                    "${cal!!.get(Calendar.HOUR_OF_DAY)} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
+                    "${cal!![Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
                 )
 
                 /* starts service to initiate handle screen on/off*/
@@ -221,35 +226,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         }
     }
 
-    /* returns api param fromTime in Calendar format*/
-    private fun getApiFromTime(day: Int): Calendar {
-        var dayName = getWeekDay(day)
-        val fromTime =
-            AppPreference(this@MainActivity).retrieveFromTime(
-                "$dayName-${Constants.fromTime}",
-                Constants.defaultFromTime
-            )
-        val cal = Calendar.getInstance()
-        val sdf = SimpleDateFormat("HH:mm:ss")
-        val date: Date = sdf.parse(fromTime) //give the fromTime here
-        cal.time = date
-        return cal
-    }
-
-    /* returns api param toTime in Calendar format*/
-    private fun getApiToTime(day: Int): Calendar {
-        var dayName = getWeekDay(day)
-        val toTime =
-            AppPreference(this@MainActivity).retrieveFromTime(
-                "$dayName-${Constants.toTime}",
-                Constants.defaultToTime
-            )
-        val cal = Calendar.getInstance()
-        val sdf = SimpleDateFormat("HH:mm:ss")
-        val date: Date = sdf.parse(toTime) //give the toTime here
-        cal.time = date
-        return cal
-    }
 
     /*service to start alarm manager for screen on/off*/
     private fun startService() {
@@ -347,7 +323,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 .show()
 
             ApiClient.client().create(ApiInterface::class.java)
-                .getTime("622946").enqueue(object : Callback<List<TimeData>> {
+                .getTime(localScreenCode).enqueue(object : Callback<List<TimeData>> {
                     override fun onResponse(
                         call: Call<List<TimeData>>,
                         response: Response<List<TimeData>>
@@ -357,25 +333,25 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                                 .show()
 
                             if (response.body() != null) {
-                                val calendar = Calendar.getInstance()
-                                val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
-                                var fromTime = "" //fromTime - screen on time
-                                var toTime = ""  //toTime - screen off time
 
-                                for (i in 0..5) {
+                                for (i in 0..6) {
                                     var fromTime = "" //fromTime - screen on time
                                     var toTime = ""  //toTime - screen off time
-                                    if (response.body()!![day].day != null) {
-                                        var dayName = getWeekDay(response.body()!![day].day)
-                                        if (response.body()!![day] != null && response.body()!![day].from != null) {
-                                            fromTime = response.body()!![day].from
+                                    if (response.body()!![i].day != null) {
+                                        var dayName =
+                                            timerHelpers.getWeekDay(response.body()!![i].day)
+                                        if (response.body()!![i] != null && response.body()!![i].from != null) {
+                                            fromTime = response.body()!![i].from
                                         }
 
-                                        if (response.body()!![day] != null && response.body()!![day].to != null) {
-                                            toTime = response.body()!![day].to
+                                        if (response.body()!![i] != null && response.body()!![i].to != null) {
+                                            toTime = response.body()!![i].to
                                         }
                                         if (fromTime.isNotEmpty() && toTime.isNotEmpty()) {
-                                            if (validTime(fromTime) && validTime(toTime)) {
+                                            if (timerHelpers.validTime(fromTime) && timerHelpers.validTime(
+                                                    toTime
+                                                )
+                                            ) {
                                                 AppPreference(this@MainActivity).saveFromTime(
                                                     fromTime,
                                                     "$dayName-${Constants.fromTime}"
@@ -384,11 +360,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                                                     toTime,
                                                     "$dayName-${Constants.toTime}"
                                                 )
-                                                Toast.makeText(
-                                                    applicationContext,
-                                                    "fromTime : $fromTime & toTime : $toTime",
-                                                    Toast.LENGTH_LONG
-                                                ).show()
                                                 Log.d(TAG2, "${response.body()}")
                                             } else {
                                                 Toast.makeText(
@@ -400,19 +371,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                                         }
                                     }
                                 }
-                                /* if api call is successful then alarm manager for screen off/on is called */
-                                lockTvDayBase()
-
-//                                Log.d(TAG2, "${response.body()!![]}")
-
-//                                if (response.body()!![day] != null && response.body()!![day].from != null) {
-//                                    fromTime = response.body()!![day].from
-//                                }
-//
-//                                if (response.body()!![day] != null && response.body()!![day].to != null) {
-//                                    toTime = response.body()!![day].to
-//                                }
-
                             }
 
                         } else {
@@ -423,10 +381,16 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                             ).show()
                             Log.d(TAG2, "Failed")
                         }
+                        /* call api to set alarm manager for screen off/on is called even if there is no internet or failed api
+                        with the stored data if there is any */
+                        lockTvDayBase()
                     }
 
                     override fun onFailure(call: Call<List<TimeData>>, t: Throwable) {
                         Log.d(TAG2, "$t")
+                        /* call api to set alarm manager for screen off/on is called even if there is no internet or failed api
+                        with the stored data if there is any */
+                        lockTvDayBase()
                     }
                 })
         } catch (e: Exception) {
@@ -437,81 +401,37 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     private fun lockTvDayBase() {
         val calendar = Calendar.getInstance()
         val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
-        /* if api call is successful then alarm manager for screen off/on is called */
-        lockTV(day)
-    }
-
-    private fun getWeekDay(day: Int): String {
-        when (day) {
-            0 -> {
-                return "Sunday"
-            }
-            1 -> {
-                return "Monday"
-            }
-            2 -> {
-                return "Tuesday"
-            }
-            3 -> {
-                return "Wednesday"
-            }
-            4 -> {
-                return "Thursday"
-            }
-            5 -> {
-                return "Friday"
-            }
-            6 -> {
-                return "Saturday"
+        var fromTimePrefs = timerHelpers.getApiFromTimePreferences(day)
+        var toTimePrefs = timerHelpers.getApiToTimePreferences(day)
+        if (fromTimePrefs.isNotEmpty() && toTimePrefs.isNotEmpty()) {
+            if (timerHelpers.validTime(fromTimePrefs) && timerHelpers.validTime(toTimePrefs)) {
+                Toast.makeText(
+                    applicationContext,
+                    "fromTime : $fromTimePrefs & toTime : $toTimePrefs",
+                    Toast.LENGTH_LONG
+                ).show()
+                /* if prefs has valid values then alarm manager for screen off/on is called */
+                lockTV(day)
+//                Log.d(TAG2,"another day :: fromTime -- ${timerHelpers.getApiFromTimePreferences(6)} :: toTime -- ${timerHelpers.getApiToTimePreferences(6)}")
             }
         }
-        return "NA"
     }
 
-    // Function to validate the
-    // Traditional Time Formats (HH:MM:SS)
-    private fun validTime(str: String): Boolean {
-        // Regex to check valid
-        // Traditional Time Formats
-        // (HH:MM:SS  or HH:MM).
-        var pattern = "^(?:[01]\\d|2[0123]):(?:[012345]\\d):(?:[012345]\\d)$"
-
-        // If the str
-        // is empty return false
-        if (str.isEmpty()) {
-            return false
+    private fun registerNetworkBroadcastForNougat() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            registerReceiver(
+                networkChangeReceiver,
+                IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+            )
         }
-
-        // Return true if the str
-        // matched the ReGex
-        return str.matches(pattern.toRegex())
-    }
-
-    private fun isInternetConnected(): Boolean {
-
-        // get Connectivity Manager object to check connection
-        val connec = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-        // Check for network connections
-        if (connec.getNetworkInfo(0)!!.getState() == android.net.NetworkInfo.State.CONNECTED ||
-            connec.getNetworkInfo(0)!!.getState() == android.net.NetworkInfo.State.CONNECTING ||
-            connec.getNetworkInfo(1)!!.getState() == android.net.NetworkInfo.State.CONNECTING ||
-            connec.getNetworkInfo(1)!!.getState() == android.net.NetworkInfo.State.CONNECTED
-        ) {
-
-
-            return true;
-
-        } else if (
-            connec.getNetworkInfo(0)!!.getState() == android.net.NetworkInfo.State.DISCONNECTED ||
-            connec.getNetworkInfo(1)!!.getState() == android.net.NetworkInfo.State.DISCONNECTED
-        ) {
-
-
-            return false;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            registerReceiver(
+                networkChangeReceiver,
+                IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+            )
         }
-        return false;
     }
+
 
     /* cancels all previously scheduled alarms */
     private fun cancelMultipleAlarms() {
@@ -904,6 +824,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         }
         ConfirmDialog.closeDialogs()
         SpinnerDialog.closeDialogs()
+        unregisterReceiver(networkChangeReceiver);
         super.onDestroy()
     }
 

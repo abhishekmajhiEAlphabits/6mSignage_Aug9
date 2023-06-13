@@ -13,6 +13,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.digitalsln.project6mSignage.ForegroundService
 import com.digitalsln.project6mSignage.MainActivity
+import com.digitalsln.project6mSignage.appUtils.TimerHelpers
 import com.digitalsln.project6mSignage.model.TimeData
 import com.digitalsln.project6mSignage.tvLauncher.utilities.AppPreference
 import com.digitalsln.project6mSignage.tvLauncher.utilities.Constants
@@ -27,16 +28,15 @@ import javax.inject.Singleton
 @Singleton
 class ApiCall(context: Context) {
     private val TAG = "TvTimer"
-    val context = context
+    private lateinit var timerHelpers: TimerHelpers
+    private var context = context
+
+
+    init {
+        timerHelpers = TimerHelpers(context)
+    }
 
     fun callApi() {
-//        if(isInternetConnected()){
-//
-//        }
-//        else{
-//            Toast.makeText(context, "No Internet Connection", Toast.LENGTH_LONG).show()
-//            Log.d(TAG, "No internet")
-//        }
         try {
             var localScreenCode = AppPreference(context).retrieveLocalScreenCode(
                 Constants.localScreenCode,
@@ -59,43 +59,46 @@ class ApiCall(context: Context) {
                             Toast.makeText(context, "" + response, Toast.LENGTH_LONG).show()
 
                             if (response.body() != null) {
-                                val calendar = Calendar.getInstance()
-                                val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
-                                var fromTime = "" //fromTime - screen on time
-                                var toTime = ""  //toTime - screen off time
+                                for (i in 0..6) {
+                                    var fromTime = "" //fromTime - screen on time
+                                    var toTime = ""  //toTime - screen off time
+                                    if (response.body()!![i].day != null) {
+                                        var dayName =
+                                            timerHelpers.getWeekDay(response.body()!![i].day)
+                                        if (response.body()!![i] != null && response.body()!![i].from != null) {
+                                            fromTime = response.body()!![i].from
+                                        }
 
-                                if (response.body()!![day] != null && response.body()!![day].from != null) {
-                                    fromTime = response.body()!![day].from
-                                }
-
-                                if (response.body()!![day] != null && response.body()!![day].to != null) {
-                                    toTime = response.body()!![day].to
-                                }
-
-                                if (fromTime.isNotEmpty() && toTime.isNotEmpty()) {
-                                    AppPreference(context).saveFromTime(
-                                        fromTime,
-                                        Constants.fromTime
-                                    )
-                                    AppPreference(context).saveToTime(
-                                        toTime,
-                                        Constants.toTime
-                                    )
-                                    Toast.makeText(
-                                        context,
-                                        "fromTime : $fromTime & toTime : $toTime",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-                                    Log.d(TAG, "${response.body()}")
-                                    if (validTime(fromTime) && validTime(toTime)) {
-                                        /* if api call is successful then alarm manager for screen off/on is called */
-                                        lockTV()
-                                    } else {
-                                        Toast.makeText(
-                                            context,
-                                            "Invalid Time",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
+                                        if (response.body()!![i] != null && response.body()!![i].to != null) {
+                                            toTime = response.body()!![i].to
+                                        }
+                                        if (fromTime.isNotEmpty() && toTime.isNotEmpty()) {
+                                            if (timerHelpers.validTime(fromTime) && timerHelpers.validTime(
+                                                    toTime
+                                                )
+                                            ) {
+                                                AppPreference(context).saveFromTime(
+                                                    fromTime,
+                                                    "$dayName-${Constants.fromTime}"
+                                                )
+                                                AppPreference(context).saveToTime(
+                                                    toTime,
+                                                    "$dayName-${Constants.toTime}"
+                                                )
+                                                Toast.makeText(
+                                                    context,
+                                                    "fromTime : $fromTime & toTime : $toTime",
+                                                    Toast.LENGTH_LONG
+                                                ).show()
+                                                Log.d(TAG, "${response.body()}")
+                                            } else {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Invalid Time",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -108,10 +111,16 @@ class ApiCall(context: Context) {
                             ).show()
                             Log.d(TAG, "Failed")
                         }
+                        /* call api to set alarm manager for screen off/on is called even if there is no internet or failed api with
+                        the stored data if there is any */
+                        lockTvDayBase()
                     }
 
                     override fun onFailure(call: Call<List<TimeData>>, t: Throwable) {
                         Log.d(TAG, "$t")
+                        /* call api to set alarm manager for screen off/on is called even if there is no internet or failed api with
+                        the stored data if there is any */
+                        lockTvDayBase()
                     }
                 })
         } catch (e: Exception) {
@@ -119,9 +128,22 @@ class ApiCall(context: Context) {
         }
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
+    private fun lockTvDayBase() {
+        val calendar = Calendar.getInstance()
+        val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
+        var fromTimePrefs = timerHelpers.getApiFromTimePreferences(day)
+        var toTimePrefs = timerHelpers.getApiToTimePreferences(day)
+        if (fromTimePrefs.isNotEmpty() && toTimePrefs.isNotEmpty()) {
+            if (timerHelpers.validTime(fromTimePrefs) && timerHelpers.validTime(toTimePrefs)) {
+                /* if prefs has valid values then alarm manager for screen off/on is called */
+                lockTV(day)
+            }
+        }
+    }
+
+
     @SuppressLint("InvalidWakeLockTag", "ShortAlarm")
-    private fun lockTV() {
+    private fun lockTV(day: Int) {
         try {
             MainActivity.isTimerSet = true
             /* initializes and schedules alarm manager for performing screen off and on */
@@ -130,8 +152,8 @@ class ApiCall(context: Context) {
 //            val pi = PendingIntent.getBroadcast(context, 0, i, 0);
             val futureDate: Calendar = Calendar.getInstance()
 
-            var apiFromTime = getApiFromTime()
-            var apiToTime = getApiToTime()
+            var apiFromTime = timerHelpers.getApiFromTime(day)
+            var apiToTime = timerHelpers.getApiToTime(day)
 
             /* gets the times from api and compares it with system current time */
             val calApiFromTime =
@@ -165,16 +187,12 @@ class ApiCall(context: Context) {
                 }
                 Log.d(
                     TAG,
-                    "${cal!!.get(Calendar.HOUR_OF_DAY)} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
+                    "${cal!![Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
                 )
 
                 /* starts service to initiate handle screen on/off*/
                 startService()
 
-//                futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
-//                futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
-//                futureDate.set(Calendar.SECOND, cal[Calendar.SECOND])
-//                am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi);
             } else {
                 if (!MainActivity.wakeLock.isHeld) {
                     MainActivity.wakeLock.acquire()
@@ -189,66 +207,6 @@ class ApiCall(context: Context) {
         }
     }
 
-    // Function to validate the
-    // Traditional Time Formats (HH:MM:SS)
-    private fun validTime(str: String): Boolean {
-        // Regex to check valid
-        // Traditional Time Formats
-        // (HH:MM:SS  or HH:MM).
-        var pattern = "^(?:[01]\\d|2[0123]):(?:[012345]\\d):(?:[012345]\\d)$"
-
-        // If the str
-        // is empty return false
-        if (str.isEmpty()) {
-            return false
-        }
-
-        // Return true if the str
-        // matched the ReGex
-        return str.matches(pattern.toRegex())
-    }
-
-    private fun isInternetConnected() : Boolean{
-        val cm = context.getSystemService(AppCompatActivity.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val currentnetwork = cm.activeNetwork
-        if (currentnetwork != null) {
-            return cm.getNetworkCapabilities(currentnetwork)!!
-                .hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) && cm.getNetworkCapabilities(
-                currentnetwork
-            )!!
-                .hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
-        } else {
-            return false
-        }
-    }
-
-    /* returns api param fromTime in Calendar format*/
-    private fun getApiFromTime(): Calendar {
-        val fromTime =
-            AppPreference(context).retrieveFromTime(
-                Constants.fromTime,
-                Constants.defaultFromTime
-            )
-        val cal = Calendar.getInstance()
-        val sdf = SimpleDateFormat("HH:mm:ss")
-        val date: Date = sdf.parse(fromTime) //give the fromTime here
-        cal.time = date
-        return cal
-    }
-
-    /* returns api param toTime in Calendar format*/
-    private fun getApiToTime(): Calendar {
-        val toTime =
-            AppPreference(context).retrieveFromTime(
-                Constants.toTime,
-                Constants.defaultToTime
-            )
-        val cal = Calendar.getInstance()
-        val sdf = SimpleDateFormat("HH:mm:ss")
-        val date: Date = sdf.parse(toTime) //give the toTime here
-        cal.time = date
-        return cal
-    }
 
     /*service to start alarm manager for screen on/off*/
     private fun startService() {

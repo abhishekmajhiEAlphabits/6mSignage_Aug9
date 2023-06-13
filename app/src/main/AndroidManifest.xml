@@ -65,6 +65,6 @@
         <receiver android:name=".receivers.ScheduleApiTimerReceiverOne"/>
         <receiver android:name=".receivers.ScheduleApiTimerReceiverTwo"/>
         <receiver android:name=".receivers.ApiCallSchedulerInitReceiver"/>
-
+        <receiver android:name=".receivers.NetworkChangeReceiver"/>
     </application>
 </manifest>
