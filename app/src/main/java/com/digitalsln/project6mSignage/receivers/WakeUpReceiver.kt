@@ -27,8 +27,6 @@ class WakeUpReceiver : BroadcastReceiver() {
         )
         wakeLock.acquire()
 
-        Log.d(TAG, "now acuire command")
-
-//        wakeLock.release()
+        Log.d(TAG, "now acquire command")
     }
 }

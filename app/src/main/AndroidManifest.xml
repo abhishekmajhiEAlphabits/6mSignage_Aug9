@@ -56,15 +56,16 @@
         </activity>
 
         <service android:name=".tvLauncher.utilities.ShellService" />
-        <service android:name=".ForegroundService"/>
+        <service android:name=".ForegroundService" />
 
         <receiver android:name=".receivers.DisplayOverlayReceiver" />
-        <receiver android:name=".receivers.ShutDownReceiver" />
+        <receiver android:name=".receivers.ShutDownReceiverToIdeal" />
+        <receiver android:name=".receivers.ShutDownReceiverToLogic" />
         <receiver android:name=".receivers.TimeOutReceiver" />
         <receiver android:name=".receivers.WakeUpReceiver" />
-        <receiver android:name=".receivers.ScheduleApiTimerReceiverOne"/>
-        <receiver android:name=".receivers.ScheduleApiTimerReceiverTwo"/>
-        <receiver android:name=".receivers.ApiCallSchedulerInitReceiver"/>
-        <receiver android:name=".receivers.NetworkChangeReceiver"/>
+        <receiver android:name=".receivers.ScheduleApiTimerReceiverOne" />
+        <receiver android:name=".receivers.ScheduleApiTimerReceiverTwo" />
+        <receiver android:name=".receivers.ApiCallSchedulerInitReceiver" />
+        <receiver android:name=".receivers.NetworkChangeReceiver" />
     </application>
 </manifest>

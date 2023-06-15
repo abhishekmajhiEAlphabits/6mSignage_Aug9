@@ -115,11 +115,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                     binding.webView.evaluateJavascript("javascript:window.localStorage.getItem('signageScreenCode')",
                         ValueCallback<String?> { s ->
                             var s = s.replace("\"", "")
-                            Toast.makeText(
-                                applicationContext,
-                                "Screen Code : $s",
-                                Toast.LENGTH_SHORT
-                            ).show()
                             AppPreference(this@MainActivity).saveExternalScreenCode(
                                 s,
                                 Constants.externalScreenCode
@@ -171,35 +166,36 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
             val futureDate: Calendar = Calendar.getInstance()
 
-            /* gets the times from api and compares it with system current time */
+            /* gets the times from preferences and compares it with system current time */
             var apiFromTime = timerHelpers.getApiFromTime(day)
-            var apiToTime = timerHelpers.getApiToTime(day)
+            var apiToIdealTime = timerHelpers.getApiToIdealTime(day)
+            var apiToLogicTime = timerHelpers.getApiToLogicTime(day)
             val calApiFromTime =
                 apiFromTime[Calendar.HOUR_OF_DAY] * 3600 + apiFromTime[Calendar.MINUTE] * 60 + apiFromTime[Calendar.SECOND]
-            val calApiToTime =
-                apiToTime[Calendar.HOUR_OF_DAY] * 3600 + apiToTime[Calendar.MINUTE] * 60 + apiToTime[Calendar.SECOND]
+            val calApiToIdealTime =
+                apiToIdealTime[Calendar.HOUR_OF_DAY] * 3600 + apiToIdealTime[Calendar.MINUTE] * 60 + apiToIdealTime[Calendar.SECOND]
+            val calApiToLogicTime =
+                apiToLogicTime[Calendar.HOUR_OF_DAY] * 3600 + apiToLogicTime[Calendar.MINUTE] * 60 + apiToLogicTime[Calendar.SECOND]
             val systemCurrentTime =
                 futureDate[Calendar.HOUR_OF_DAY] * 3600 + futureDate[Calendar.MINUTE] * 60 + futureDate[Calendar.SECOND]
             Log.d(
-                TAG2, "$calApiFromTime :: $calApiToTime :: $systemCurrentTime"
+                TAG2,
+                "$calApiFromTime :: $calApiToIdealTime :: $calApiToIdealTime :: $systemCurrentTime"
             )
 
             var hrs = futureDate[Calendar.HOUR_OF_DAY]
             var mins = futureDate[Calendar.MINUTE]
             var secs = futureDate[Calendar.SECOND]
-            Toast.makeText(
-                applicationContext,
-                "Current Hours :: $hrs && Current Mins : $mins && Current secs : $secs",
-                Toast.LENGTH_LONG
-            ).show()
 
             /* if times from api is greater than system time then only schedules the alarm */
-            if (calApiFromTime > systemCurrentTime || calApiToTime > systemCurrentTime) {
+            if (calApiFromTime > systemCurrentTime || calApiToIdealTime > systemCurrentTime || calApiToLogicTime > systemCurrentTime) {
                 var cal: Calendar? = null
                 if (calApiFromTime > systemCurrentTime) {
                     cal = apiFromTime
-                } else if (calApiToTime > systemCurrentTime) {
-                    cal = apiToTime
+                } else if (calApiToIdealTime > systemCurrentTime) {
+                    cal = apiToIdealTime
+                } else if (calApiToLogicTime > systemCurrentTime) {
+                    cal = apiToLogicTime
                 } else {
                     cal = apiFromTime
                 }
@@ -313,14 +309,15 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     }
 
 
+    /*calls api and stores the fromTime and toTime in the preferences(fromTime,toIdeal,toLogic)
+    accordingly
+     */
     private fun callApi() {
         try {
             var localScreenCode = AppPreference(this@MainActivity).retrieveLocalScreenCode(
                 Constants.localScreenCode,
                 Constants.defaultLocalScreenCode
             )
-            Toast.makeText(applicationContext, "Pref is :: $localScreenCode", Toast.LENGTH_LONG)
-                .show()
 
             ApiClient.client().create(ApiInterface::class.java)
                 .getTime(localScreenCode).enqueue(object : Callback<List<TimeData>> {
@@ -329,54 +326,137 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                         response: Response<List<TimeData>>
                     ) {
                         if (response.isSuccessful) {
-                            Toast.makeText(applicationContext, "" + response, Toast.LENGTH_LONG)
-                                .show()
+//                            Toast.makeText(applicationContext, "" + response, Toast.LENGTH_LONG)
+//                                .show()
 
                             if (response.body() != null) {
 
                                 for (i in 0..6) {
                                     var fromTime = "" //fromTime - screen on time
                                     var toTime = ""  //toTime - screen off time
-                                    if (response.body()!![i].day != null) {
-                                        var dayName =
-                                            timerHelpers.getWeekDay(response.body()!![i].day)
-                                        if (response.body()!![i] != null && response.body()!![i].from != null) {
-                                            fromTime = response.body()!![i].from
-                                        }
+                                    if (i == 6) {
+                                        if (response.body()!![i].day != null && response.body()!![0].day != null) {
+                                            var dayName =
+                                                timerHelpers.getWeekDay(response.body()!![i].day)
+                                            if (response.body()!![i] != null && response.body()!![i].from != null) {
+                                                fromTime = response.body()!![i].from
+                                            }
 
-                                        if (response.body()!![i] != null && response.body()!![i].to != null) {
-                                            toTime = response.body()!![i].to
+                                            if (response.body()!![i] != null && response.body()!![i].to != null) {
+                                                toTime = response.body()!![i].to
+                                            }
+                                            if (fromTime.isNotEmpty() && toTime.isNotEmpty()) {
+                                                if (timerHelpers.validTime(fromTime) && timerHelpers.validTime(
+                                                        toTime
+                                                    )
+                                                ) {
+                                                    if (fromTime > toTime) {
+                                                        var nextDayName =
+                                                            timerHelpers.getWeekDay(response.body()!![0].day)
+                                                        AppPreference(this@MainActivity).saveToLogicTime(
+                                                            toTime,
+                                                            "$nextDayName-${Constants.toLogicTime}"
+                                                        )
+                                                        AppPreference(this@MainActivity).saveFromTime(
+                                                            fromTime,
+                                                            "$dayName-${Constants.fromTime}"
+                                                        )
+                                                        AppPreference(this@MainActivity).saveToIdealTime(
+                                                            "00:00:00",
+                                                            "$dayName-${Constants.toIdealTime}"
+                                                        )
+                                                    } else {
+                                                        var nextDayName =
+                                                            timerHelpers.getWeekDay(response.body()!![0].day)
+                                                        AppPreference(this@MainActivity).saveToLogicTime(
+                                                            "00:00:00",
+                                                            "$nextDayName-${Constants.toLogicTime}"
+                                                        )
+                                                        AppPreference(this@MainActivity).saveFromTime(
+                                                            fromTime,
+                                                            "$dayName-${Constants.fromTime}"
+                                                        )
+                                                        AppPreference(this@MainActivity).saveToIdealTime(
+                                                            toTime,
+                                                            "$dayName-${Constants.toIdealTime}"
+                                                        )
+                                                    }
+                                                    Log.d(TAG2, "${response.body()}")
+                                                } else {
+                                                    Toast.makeText(
+                                                        applicationContext,
+                                                        "Invalid Time",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                            }
                                         }
-                                        if (fromTime.isNotEmpty() && toTime.isNotEmpty()) {
-                                            if (timerHelpers.validTime(fromTime) && timerHelpers.validTime(
-                                                    toTime
-                                                )
-                                            ) {
-                                                AppPreference(this@MainActivity).saveFromTime(
-                                                    fromTime,
-                                                    "$dayName-${Constants.fromTime}"
-                                                )
-                                                AppPreference(this@MainActivity).saveToTime(
-                                                    toTime,
-                                                    "$dayName-${Constants.toTime}"
-                                                )
-                                                Log.d(TAG2, "${response.body()}")
-                                            } else {
-                                                Toast.makeText(
-                                                    applicationContext,
-                                                    "Invalid Time",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
+                                    } else {
+                                        if (response.body()!![i].day != null && response.body()!![i + 1].day != null) {
+                                            var dayName =
+                                                timerHelpers.getWeekDay(response.body()!![i].day)
+                                            if (response.body()!![i] != null && response.body()!![i].from != null) {
+                                                fromTime = response.body()!![i].from
+                                            }
+
+                                            if (response.body()!![i] != null && response.body()!![i].to != null) {
+                                                toTime = response.body()!![i].to
+                                            }
+                                            if (fromTime.isNotEmpty() && toTime.isNotEmpty()) {
+                                                if (timerHelpers.validTime(fromTime) && timerHelpers.validTime(
+                                                        toTime
+                                                    )
+                                                ) {
+                                                    if (fromTime > toTime) {
+                                                        var nextDayName =
+                                                            timerHelpers.getWeekDay(response.body()!![i + 1].day)
+                                                        AppPreference(this@MainActivity).saveToLogicTime(
+                                                            toTime,
+                                                            "$nextDayName-${Constants.toLogicTime}"
+                                                        )
+                                                        AppPreference(this@MainActivity).saveFromTime(
+                                                            fromTime,
+                                                            "$dayName-${Constants.fromTime}"
+                                                        )
+                                                        AppPreference(this@MainActivity).saveToIdealTime(
+                                                            "00:00:00",
+                                                            "$dayName-${Constants.toIdealTime}"
+                                                        )
+                                                    } else {
+                                                        var nextDayName =
+                                                            timerHelpers.getWeekDay(response.body()!![i + 1].day)
+                                                        AppPreference(this@MainActivity).saveToLogicTime(
+                                                            "00:00:00",
+                                                            "$nextDayName-${Constants.toLogicTime}"
+                                                        )
+                                                        AppPreference(this@MainActivity).saveFromTime(
+                                                            fromTime,
+                                                            "$dayName-${Constants.fromTime}"
+                                                        )
+                                                        AppPreference(this@MainActivity).saveToIdealTime(
+                                                            toTime,
+                                                            "$dayName-${Constants.toIdealTime}"
+                                                        )
+                                                    }
+                                                    Log.d(TAG2, "${response.body()}")
+                                                } else {
+                                                    Toast.makeText(
+                                                        applicationContext,
+                                                        "Invalid Time",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
                                             }
                                         }
                                     }
+
                                 }
                             }
 
                         } else {
                             Toast.makeText(
                                 applicationContext,
-                                "Failed api call",
+                                "Failed data fetch!",
                                 Toast.LENGTH_SHORT
                             ).show()
                             Log.d(TAG2, "Failed")
@@ -402,19 +482,15 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         val calendar = Calendar.getInstance()
         val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
         var fromTimePrefs = timerHelpers.getApiFromTimePreferences(day)
-        var toTimePrefs = timerHelpers.getApiToTimePreferences(day)
-        if (fromTimePrefs.isNotEmpty() && toTimePrefs.isNotEmpty()) {
-            if (timerHelpers.validTime(fromTimePrefs) && timerHelpers.validTime(toTimePrefs)) {
-                Toast.makeText(
-                    applicationContext,
-                    "fromTime : $fromTimePrefs & toTime : $toTimePrefs",
-                    Toast.LENGTH_LONG
-                ).show()
-                /* if prefs has valid values then alarm manager for screen off/on is called */
-                lockTV(day)
-//                Log.d(TAG2,"another day :: fromTime -- ${timerHelpers.getApiFromTimePreferences(6)} :: toTime -- ${timerHelpers.getApiToTimePreferences(6)}")
-            }
-        }
+        var toIdealTimePrefs = timerHelpers.getApiToIdealTimePreferences(day)
+        var toLogicTimePrefs = timerHelpers.getApiToLogicTimePreferences(day)
+        lockTV(day)
+        Log.d(
+            TAG2,
+            "another day :: fromTime -- ${timerHelpers.getApiFromTimePreferences(4)} :: toIdealTime -- ${
+                timerHelpers.getApiToIdealTimePreferences(5)
+            } :: toLogicTime -- ${timerHelpers.getApiToLogicTimePreferences(4)}"
+        )
     }
 
     private fun registerNetworkBroadcastForNougat() {
@@ -435,11 +511,12 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
     /* cancels all previously scheduled alarms */
     private fun cancelMultipleAlarms() {
-        val size = 3
+        val size = 4
         val alarmManagers = arrayOfNulls<AlarmManager>(size)
         val intents = arrayOf<Intent>(
 //            Intent(applicationContext, DisplayOverlayReceiver::class.java),
-            Intent(applicationContext, ShutDownReceiver::class.java),
+            Intent(applicationContext, ShutDownReceiverToIdeal::class.java),
+            Intent(applicationContext, ShutDownReceiverToLogic::class.java),
             Intent(applicationContext, TimeOutReceiver::class.java),
             Intent(applicationContext, WakeUpReceiver::class.java)
         )
@@ -480,6 +557,24 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             if (!wakeLock.isHeld) {
                 wakeLock.acquire()
             }
+
+            /* checks if the app is run first time */
+            val isFirstRun = AppPreference(this@MainActivity).isFirstTimeRun()
+            if (isFirstRun) {
+                /* runs on first run of the app after install and starts the function to call the api everyday */
+                AppPreference(this@MainActivity).saveLocalScreenCode(
+                    externalCode,
+                    Constants.localScreenCode
+                )
+
+                //alarm manager for everyday api hit timer after every 24hrs
+                scheduleApiCallTimer()
+                AppPreference(this@MainActivity).setFirstTimeRun(false)
+                Log.d(TAG2, "is first")
+            } else {
+                Log.d(TAG2, "!first")
+            }
+
         } catch (e: Exception) {
             Log.d(TAG2, "$e")
         }

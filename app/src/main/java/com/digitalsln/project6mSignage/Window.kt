@@ -6,16 +6,13 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
 import android.os.Build
-import android.provider.Settings
 import android.util.Log
 import android.view.*
 import android.widget.Toast
 import com.digitalsln.project6mSignage.appUtils.TimerHelpers
-import com.digitalsln.project6mSignage.receivers.ShutDownReceiver
-import com.digitalsln.project6mSignage.receivers.TimeOutReceiver
+import com.digitalsln.project6mSignage.receivers.ShutDownReceiverToIdeal
+import com.digitalsln.project6mSignage.receivers.ShutDownReceiverToLogic
 import com.digitalsln.project6mSignage.receivers.WakeUpReceiver
-import com.digitalsln.project6mSignage.tvLauncher.utilities.AppPreference
-import com.digitalsln.project6mSignage.tvLauncher.utilities.Constants
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -67,8 +64,11 @@ class Window(context: Context) {
             if (mView!!.windowToken == null) {
                 if (mView!!.parent == null) {
                     mWindowManager!!.addView(mView, mParams)
-                    // call to turn off screen
-                    turnOffScreen()
+                    // call to turn off screen for toIdeal case
+                    turnOffScreenIdealCase()
+
+                    // call to turn off screen for toLogic case
+                    turnOffScreenLogicCase()
 
                     //call to turn on screen
                     turnOnScreen()
@@ -103,34 +103,82 @@ class Window(context: Context) {
         }
     }
 
-    /*turns screen off at set time*/
-    private fun turnOffScreen() {
+    /*turns screen off at set time for toIdeal time case*/
+    private fun turnOffScreenIdealCase() {
         try {
-            val am = context!!.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val i = Intent(context, ShutDownReceiver::class.java)
-            val pi = PendingIntent.getBroadcast(context, 0, i, 0)
-            val futureDate: Calendar = Calendar.getInstance()
-            val toTime = timerHelpers.getApiToTimePreferences(timerHelpers.getWeekDayInInt())
-            val cal = Calendar.getInstance()
-            val sdf = SimpleDateFormat("HH:mm:ss")
-            val date: Date = sdf.parse(toTime) //give the toTime here
-            cal.time = date
-            val apiTime =
-                cal[Calendar.HOUR_OF_DAY] * 3600 + cal[Calendar.MINUTE] * 60 + cal[Calendar.SECOND]
-            val systemCurrentTime =
-                futureDate[Calendar.HOUR_OF_DAY] * 3600 + futureDate[Calendar.MINUTE] * 60 + futureDate[Calendar.SECOND]
-            Log.d(
-                TAG, "$apiTime :: $systemCurrentTime"
-            )
-            if (apiTime > systemCurrentTime) {
+            val toIdealTime =
+                timerHelpers.getApiToIdealTimePreferences(timerHelpers.getWeekDayInInt())
+            if (timerHelpers.isTimeValidAndNotEmpty(toIdealTime)) {
+                val am = context!!.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                val i = Intent(context, ShutDownReceiverToIdeal::class.java)
+                val pi = PendingIntent.getBroadcast(context, 0, i, 0)
+                val futureDate: Calendar = Calendar.getInstance()
+                val cal = Calendar.getInstance()
+                val sdf = SimpleDateFormat("HH:mm:ss")
+                val date: Date = sdf.parse(toIdealTime) //give the toIdealTime here
+                cal.time = date
+                val apiTime =
+                    cal[Calendar.HOUR_OF_DAY] * 3600 + cal[Calendar.MINUTE] * 60 + cal[Calendar.SECOND]
+                val systemCurrentTime =
+                    futureDate[Calendar.HOUR_OF_DAY] * 3600 + futureDate[Calendar.MINUTE] * 60 + futureDate[Calendar.SECOND]
                 Log.d(
-                    TAG,
-                    "${cal[Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
+                    TAG, "$apiTime :: $systemCurrentTime"
                 )
-                futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
-                futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
-                futureDate.set(Calendar.SECOND, cal[Calendar.SECOND] - 10)
-                am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
+                if (apiTime > systemCurrentTime) {
+                    Log.d(
+                        TAG,
+                        "${cal[Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
+                    )
+                    futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
+                    futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
+                    futureDate.set(Calendar.SECOND, cal[Calendar.SECOND] - 10)
+                    am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
+                }
+            } else {
+                Log.d(TAG, "Invalid Prefs toIdealTime")
+            }
+        } catch (e: Exception) {
+            Toast.makeText(
+                context,
+                "Failed to start display popup",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    /*turns screen off at set time for toLogic time case*/
+    private fun turnOffScreenLogicCase() {
+        try {
+            val toLogicTime =
+                timerHelpers.getApiToLogicTimePreferences(timerHelpers.getWeekDayInInt())
+            if (timerHelpers.isTimeValidAndNotEmpty(toLogicTime)) {
+                val am = context!!.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                val i = Intent(context, ShutDownReceiverToLogic::class.java)
+                val pi = PendingIntent.getBroadcast(context, 0, i, 0)
+                val futureDate: Calendar = Calendar.getInstance()
+                val cal = Calendar.getInstance()
+                val sdf = SimpleDateFormat("HH:mm:ss")
+                val date: Date = sdf.parse(toLogicTime) //give the toLogicTime here
+                cal.time = date
+                val apiTime =
+                    cal[Calendar.HOUR_OF_DAY] * 3600 + cal[Calendar.MINUTE] * 60 + cal[Calendar.SECOND]
+                val systemCurrentTime =
+                    futureDate[Calendar.HOUR_OF_DAY] * 3600 + futureDate[Calendar.MINUTE] * 60 + futureDate[Calendar.SECOND]
+                Log.d(
+                    TAG, "$apiTime :: $systemCurrentTime"
+                )
+                if (apiTime > systemCurrentTime) {
+                    Log.d(
+                        TAG,
+                        "${cal[Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
+                    )
+                    futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
+                    futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
+                    futureDate.set(Calendar.SECOND, cal[Calendar.SECOND] - 10)
+                    am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
+                }
+            } else {
+                Log.d(TAG, "Invalid Prefs toLogicTime")
             }
         } catch (e: Exception) {
             Toast.makeText(
@@ -144,31 +192,35 @@ class Window(context: Context) {
     /*turns screen on at set time*/
     private fun turnOnScreen() {
         try {
-            val am = context!!.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-            val i = Intent(context, WakeUpReceiver::class.java)
-            val pi = PendingIntent.getBroadcast(context, 0, i, 0)
-            val futureDate: Calendar = Calendar.getInstance()
             val fromTime = timerHelpers.getApiFromTimePreferences(timerHelpers.getWeekDayInInt())
-            val cal = Calendar.getInstance()
-            val sdf = SimpleDateFormat("HH:mm:ss")
-            val date: Date = sdf.parse(fromTime) //give the fromTime here
-            cal.time = date
-            val apiTime =
-                cal[Calendar.HOUR_OF_DAY] * 3600 + cal[Calendar.MINUTE] * 60 + cal[Calendar.SECOND]
-            val systemCurrentTime =
-                futureDate[Calendar.HOUR_OF_DAY] * 3600 + futureDate[Calendar.MINUTE] * 60 + futureDate[Calendar.SECOND]
-            Log.d(
-                TAG, "$apiTime :: $systemCurrentTime"
-            )
-            if (apiTime > systemCurrentTime) {
+            if (timerHelpers.isTimeValidAndNotEmpty(fromTime)) {
+                val am = context!!.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                val i = Intent(context, WakeUpReceiver::class.java)
+                val pi = PendingIntent.getBroadcast(context, 0, i, 0)
+                val futureDate: Calendar = Calendar.getInstance()
+                val cal = Calendar.getInstance()
+                val sdf = SimpleDateFormat("HH:mm:ss")
+                val date: Date = sdf.parse(fromTime) //give the fromTime here
+                cal.time = date
+                val apiTime =
+                    cal[Calendar.HOUR_OF_DAY] * 3600 + cal[Calendar.MINUTE] * 60 + cal[Calendar.SECOND]
+                val systemCurrentTime =
+                    futureDate[Calendar.HOUR_OF_DAY] * 3600 + futureDate[Calendar.MINUTE] * 60 + futureDate[Calendar.SECOND]
                 Log.d(
-                    TAG,
-                    "${cal[Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
+                    TAG, "$apiTime :: $systemCurrentTime"
                 )
-                futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
-                futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
-                futureDate.set(Calendar.SECOND, cal[Calendar.SECOND])
-                am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
+                if (apiTime > systemCurrentTime) {
+                    Log.d(
+                        TAG,
+                        "${cal[Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
+                    )
+                    futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
+                    futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
+                    futureDate.set(Calendar.SECOND, cal[Calendar.SECOND])
+                    am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
+                }
+            } else {
+                Log.d(TAG, "Invalid Prefs fromTime")
             }
         } catch (e: Exception) {
             Log.d(TAG, "wake up alarm failed")

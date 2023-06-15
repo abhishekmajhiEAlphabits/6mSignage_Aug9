@@ -31,15 +31,31 @@ class TimerHelpers(context: Context) {
         return cal
     }
 
-    /* returns api param toTime in Calendar format*/
-    fun getApiToTime(day: Int): Calendar {
+    /* returns api param toIdealTime in Calendar format*/
+    fun getApiToIdealTime(day: Int): Calendar {
         var dayName = getWeekDay(day)
         val toTime =
-            AppPreference(context).retrieveToTime(
-                "$dayName-${Constants.toTime}",
-                Constants.defaultToTime
+            AppPreference(context).retrieveToIdealTime(
+                "$dayName-${Constants.toIdealTime}",
+                Constants.defaultToIdealTime
             )
-        Log.d(TAG, "getApiTo :: $toTime")
+        Log.d(TAG, "getApiToIdeal :: $toTime")
+        val cal = Calendar.getInstance()
+        val sdf = SimpleDateFormat("HH:mm:ss")
+        val date: Date = sdf.parse(toTime) //give the toTime here
+        cal.time = date
+        return cal
+    }
+
+    /* returns api param toLogicTime in Calendar format*/
+    fun getApiToLogicTime(day: Int): Calendar {
+        var dayName = getWeekDay(day)
+        val toTime =
+            AppPreference(context).retrieveToLogicTime(
+                "$dayName-${Constants.toLogicTime}",
+                Constants.defaultToLogicTime
+            )
+        Log.d(TAG, "getApiToLogic :: $toTime")
         val cal = Calendar.getInstance()
         val sdf = SimpleDateFormat("HH:mm:ss")
         val date: Date = sdf.parse(toTime) //give the toTime here
@@ -56,12 +72,21 @@ class TimerHelpers(context: Context) {
         )
     }
 
-    /* returns toTime preferences in String format*/
-    fun getApiToTimePreferences(day: Int): String {
+    /* returns toLogicTime preferences in String format*/
+    fun getApiToIdealTimePreferences(day: Int): String {
         var dayName = getWeekDay(day)
-        return AppPreference(context).retrieveToTime(
-            "$dayName-${Constants.toTime}",
-            Constants.defaultToTime
+        return AppPreference(context).retrieveToIdealTime(
+            "$dayName-${Constants.toIdealTime}",
+            Constants.defaultToIdealTime
+        )
+    }
+
+    /* returns toLogicTime preferences in String format*/
+    fun getApiToLogicTimePreferences(day: Int): String {
+        var dayName = getWeekDay(day)
+        return AppPreference(context).retrieveToLogicTime(
+            "$dayName-${Constants.toLogicTime}",
+            Constants.defaultToLogicTime
         )
     }
 
@@ -116,29 +141,7 @@ class TimerHelpers(context: Context) {
         return str.matches(pattern.toRegex())
     }
 
-    private fun isInternetConnected(): Boolean {
-
-        // get Connectivity Manager object to check connection
-        val connec = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-
-        // Check for network connections
-        if (connec.getNetworkInfo(0)!!.getState() == android.net.NetworkInfo.State.CONNECTED ||
-            connec.getNetworkInfo(0)!!.getState() == android.net.NetworkInfo.State.CONNECTING ||
-            connec.getNetworkInfo(1)!!.getState() == android.net.NetworkInfo.State.CONNECTING ||
-            connec.getNetworkInfo(1)!!.getState() == android.net.NetworkInfo.State.CONNECTED
-        ) {
-
-
-            return true;
-
-        } else if (
-            connec.getNetworkInfo(0)!!.getState() == android.net.NetworkInfo.State.DISCONNECTED ||
-            connec.getNetworkInfo(1)!!.getState() == android.net.NetworkInfo.State.DISCONNECTED
-        ) {
-
-
-            return false;
-        }
-        return false;
+    fun isTimeValidAndNotEmpty(str: String): Boolean {
+        return str.isNotEmpty() && validTime(str) && str != Constants.defaultFromTime
     }
 }

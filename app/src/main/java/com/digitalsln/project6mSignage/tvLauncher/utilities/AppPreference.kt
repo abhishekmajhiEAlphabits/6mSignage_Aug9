@@ -64,12 +64,21 @@ class AppPreference(context: Context) {
         return sharedPreference?.getString(key, default)!!
     }
 
-    fun saveToTime(value: String, key: String) {
+    fun saveToIdealTime(value: String, key: String) {
         if (sharedPreference == null) return
         sharedPreference!!.edit().putString(key, value).apply()
     }
 
-    fun retrieveToTime(key: String, default: String): String {
+    fun retrieveToIdealTime(key: String, default: String): String {
+        return sharedPreference?.getString(key, default)!!
+    }
+
+    fun saveToLogicTime(value: String, key: String) {
+        if (sharedPreference == null) return
+        sharedPreference!!.edit().putString(key, value).apply()
+    }
+
+    fun retrieveToLogicTime(key: String, default: String): String {
         return sharedPreference?.getString(key, default)!!
     }
 
