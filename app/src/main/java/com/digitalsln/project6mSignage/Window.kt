@@ -1,6 +1,7 @@
 package com.digitalsln.project6mSignage
 
 import android.app.AlarmManager
+import android.app.AlarmManager.AlarmClockInfo
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -9,6 +10,7 @@ import android.os.Build
 import android.util.Log
 import android.view.*
 import android.widget.Toast
+import com.digitalsln.project6mSignage.appUtils.AppLogger
 import com.digitalsln.project6mSignage.appUtils.TimerHelpers
 import com.digitalsln.project6mSignage.receivers.ShutDownReceiverToIdeal
 import com.digitalsln.project6mSignage.receivers.ShutDownReceiverToLogic
@@ -30,6 +32,7 @@ class Window(context: Context) {
     private var layoutInflater: LayoutInflater? = null
     private lateinit var timerHelpers: TimerHelpers
     private val TAG = "TvTimer"
+    private lateinit var appLogger: AppLogger
 
     init {
         this.context = context
@@ -55,6 +58,7 @@ class Window(context: Context) {
         mParams!!.gravity = Gravity.CENTER
         mWindowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         timerHelpers = TimerHelpers(context)
+        appLogger = AppLogger()
     }
 
     fun open() {
@@ -132,7 +136,17 @@ class Window(context: Context) {
                     futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
                     futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
                     futureDate.set(Calendar.SECOND, cal[Calendar.SECOND] - 10)
-                    am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
+//                    am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
+
+                    val ac = AlarmClockInfo(futureDate.time.time,pi)
+                    am.setAlarmClock(ac,pi)
+
+                    val calendar = Calendar.getInstance()
+                    val sdfData = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+                    var logTime = sdfData.format(calendar.time)
+                    var log = "$logTime Going to turn off screen at $toIdealTime"
+                    appLogger.appendLog(log)
+                    Log.d(TAG, "$log")
                 }
             } else {
                 Log.d(TAG, "Invalid Prefs toIdealTime")
@@ -175,7 +189,17 @@ class Window(context: Context) {
                     futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
                     futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
                     futureDate.set(Calendar.SECOND, cal[Calendar.SECOND] - 10)
-                    am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
+//                    am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
+
+                    val ac = AlarmClockInfo(futureDate.time.time,pi)
+                    am.setAlarmClock(ac,pi)
+
+                    val calendar = Calendar.getInstance()
+                    val sdfData = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+                    var logTime = sdfData.format(calendar.time)
+                    var log = "$logTime Going to turn off screen at $toLogicTime"
+                    appLogger.appendLog(log)
+                    Log.d(TAG, "$log")
                 }
             } else {
                 Log.d(TAG, "Invalid Prefs toLogicTime")
@@ -217,7 +241,17 @@ class Window(context: Context) {
                     futureDate.set(Calendar.HOUR_OF_DAY, cal[Calendar.HOUR_OF_DAY])
                     futureDate.set(Calendar.MINUTE, cal[Calendar.MINUTE])
                     futureDate.set(Calendar.SECOND, cal[Calendar.SECOND])
-                    am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
+//                    am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
+
+                    val ac = AlarmClockInfo(futureDate.time.time,pi)
+                    am.setAlarmClock(ac,pi)
+
+                    val calendar = Calendar.getInstance()
+                    val sdfData = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+                    var logTime = sdfData.format(calendar.time)
+                    var log = "$logTime Going to turn on screen at $fromTime"
+                    appLogger.appendLog(log)
+                    Log.d(TAG, "$log")
                 }
             } else {
                 Log.d(TAG, "Invalid Prefs fromTime")

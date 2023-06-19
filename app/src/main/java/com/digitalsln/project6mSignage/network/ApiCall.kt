@@ -13,6 +13,7 @@ import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.digitalsln.project6mSignage.ForegroundService
 import com.digitalsln.project6mSignage.MainActivity
+import com.digitalsln.project6mSignage.appUtils.AppLogger
 import com.digitalsln.project6mSignage.appUtils.TimerHelpers
 import com.digitalsln.project6mSignage.model.TimeData
 import com.digitalsln.project6mSignage.tvLauncher.utilities.AppPreference
@@ -30,10 +31,12 @@ class ApiCall(context: Context) {
     private val TAG = "TvTimer"
     private lateinit var timerHelpers: TimerHelpers
     private var context = context
+    private lateinit var appLogger: AppLogger
 
 
     init {
         timerHelpers = TimerHelpers(context)
+        appLogger = AppLogger()
     }
 
     /*calls api and stores the fromTime and toTime in the preferences(fromTime,toIdeal,toLogic)
@@ -41,6 +44,12 @@ class ApiCall(context: Context) {
      */
     fun callApi() {
         try {
+            val cal = Calendar.getInstance()
+            val sdf = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+            var logTime = sdf.format(cal.time)
+            var log = "$logTime Calling backend API to get timings"
+            Log.d(TAG, "$log")
+            appLogger.appendLog(log)
             var localScreenCode = AppPreference(context).retrieveLocalScreenCode(
                 Constants.localScreenCode,
                 Constants.defaultLocalScreenCode
@@ -57,19 +66,43 @@ class ApiCall(context: Context) {
 //                                .show()
 
                             if (response.body() != null) {
+                                val cal = Calendar.getInstance()
+                                val sdf = SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+                                var logTime = sdf.format(cal.time)
+                                var log = "$logTime API returned response successfully"
+                                Log.d(TAG, "$log")
+                                appLogger.appendLog(log)
 
                                 for (i in 0..6) {
                                     var fromTime = "" //fromTime - screen on time
                                     var toTime = ""  //toTime - screen off time
+                                    var fromTimeSeconds = 0
+                                    var toTimeSeconds = 0
                                     if (i == 6) {
                                         if (response.body()!![i].day != null && response.body()!![0].day != null) {
                                             var dayName =
                                                 timerHelpers.getWeekDay(response.body()!![i].day)
                                             if (response.body()!![i] != null && response.body()!![i].from != null) {
+                                                val cal = Calendar.getInstance()
+                                                val sdf = SimpleDateFormat("HH:mm:ss")
+                                                val date: Date =
+                                                    sdf.parse(response.body()!![i].from) //give the fromTime here
+                                                cal.time = date
+                                                val apiFromTimeSeconds =
+                                                    cal[Calendar.HOUR_OF_DAY] * 3600 + cal[Calendar.MINUTE] * 60 + cal[Calendar.SECOND]
+                                                fromTimeSeconds = apiFromTimeSeconds
                                                 fromTime = response.body()!![i].from
                                             }
 
                                             if (response.body()!![i] != null && response.body()!![i].to != null) {
+                                                val cal = Calendar.getInstance()
+                                                val sdf = SimpleDateFormat("HH:mm:ss")
+                                                val date: Date =
+                                                    sdf.parse(response.body()!![i].to) //give the toTime here
+                                                cal.time = date
+                                                val apiToTimeSeconds =
+                                                    cal[Calendar.HOUR_OF_DAY] * 3600 + cal[Calendar.MINUTE] * 60 + cal[Calendar.SECOND]
+                                                toTimeSeconds = apiToTimeSeconds
                                                 toTime = response.body()!![i].to
                                             }
                                             if (fromTime.isNotEmpty() && toTime.isNotEmpty()) {
@@ -77,7 +110,7 @@ class ApiCall(context: Context) {
                                                         toTime
                                                     )
                                                 ) {
-                                                    if (fromTime > toTime) {
+                                                    if (fromTimeSeconds > toTimeSeconds) {
                                                         var nextDayName =
                                                             timerHelpers.getWeekDay(response.body()!![0].day)
                                                         AppPreference(context).saveToLogicTime(
@@ -108,6 +141,13 @@ class ApiCall(context: Context) {
                                                             "$dayName-${Constants.toIdealTime}"
                                                         )
                                                     }
+                                                    val cal = Calendar.getInstance()
+                                                    val sdf =
+                                                        SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+                                                    var logTime = sdf.format(cal.time)
+                                                    var log = "$logTime timings was stored locally"
+                                                    Log.d(TAG, "$log")
+                                                    appLogger.appendLog(log)
                                                     Log.d(TAG, "${response.body()}")
                                                 } else {
                                                     Toast.makeText(
@@ -123,10 +163,26 @@ class ApiCall(context: Context) {
                                             var dayName =
                                                 timerHelpers.getWeekDay(response.body()!![i].day)
                                             if (response.body()!![i] != null && response.body()!![i].from != null) {
+                                                val cal = Calendar.getInstance()
+                                                val sdf = SimpleDateFormat("HH:mm:ss")
+                                                val date: Date =
+                                                    sdf.parse(response.body()!![i].from) //give the fromTime here
+                                                cal.time = date
+                                                val apiFromTimeSeconds =
+                                                    cal[Calendar.HOUR_OF_DAY] * 3600 + cal[Calendar.MINUTE] * 60 + cal[Calendar.SECOND]
+                                                fromTimeSeconds = apiFromTimeSeconds
                                                 fromTime = response.body()!![i].from
                                             }
 
                                             if (response.body()!![i] != null && response.body()!![i].to != null) {
+                                                val cal = Calendar.getInstance()
+                                                val sdf = SimpleDateFormat("HH:mm:ss")
+                                                val date: Date =
+                                                    sdf.parse(response.body()!![i].to) //give the toTime here
+                                                cal.time = date
+                                                val apiToTimeSeconds =
+                                                    cal[Calendar.HOUR_OF_DAY] * 3600 + cal[Calendar.MINUTE] * 60 + cal[Calendar.SECOND]
+                                                toTimeSeconds = apiToTimeSeconds
                                                 toTime = response.body()!![i].to
                                             }
                                             if (fromTime.isNotEmpty() && toTime.isNotEmpty()) {
@@ -134,7 +190,7 @@ class ApiCall(context: Context) {
                                                         toTime
                                                     )
                                                 ) {
-                                                    if (fromTime > toTime) {
+                                                    if (fromTimeSeconds > toTimeSeconds) {
                                                         var nextDayName =
                                                             timerHelpers.getWeekDay(response.body()!![i + 1].day)
                                                         AppPreference(context).saveToLogicTime(
@@ -165,6 +221,13 @@ class ApiCall(context: Context) {
                                                             "$dayName-${Constants.toIdealTime}"
                                                         )
                                                     }
+                                                    val cal = Calendar.getInstance()
+                                                    val sdf =
+                                                        SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
+                                                    var logTime = sdf.format(cal.time)
+                                                    var log = "$logTime timings was stored locally"
+                                                    Log.d(TAG, "$log")
+                                                    appLogger.appendLog(log)
                                                     Log.d(TAG, "${response.body()}")
                                                 } else {
                                                     Toast.makeText(
@@ -182,7 +245,7 @@ class ApiCall(context: Context) {
                         } else {
                             Toast.makeText(
                                 context,
-                                "Failed data fetch!",
+                                "Failed to refresh! Please try again",
                                 Toast.LENGTH_SHORT
                             ).show()
                             Log.d(TAG, "Failed")
@@ -193,6 +256,11 @@ class ApiCall(context: Context) {
                     }
 
                     override fun onFailure(call: Call<List<TimeData>>, t: Throwable) {
+                        Toast.makeText(
+                            context,
+                            "Failed to refresh! Please try again",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         Log.d(TAG, "$t")
                         /* call api to set alarm manager for screen off/on is called even if there is no internet or failed api
                         with the stored data if there is any */
@@ -200,6 +268,11 @@ class ApiCall(context: Context) {
                     }
                 })
         } catch (e: Exception) {
+            Toast.makeText(
+                context,
+                "Failed to refresh! Please try again",
+                Toast.LENGTH_SHORT
+            ).show()
             Log.d(TAG, "$e")
         }
     }
@@ -207,9 +280,6 @@ class ApiCall(context: Context) {
     private fun lockTvDayBase() {
         val calendar = Calendar.getInstance()
         val day = calendar.get(Calendar.DAY_OF_WEEK) - 1
-        var fromTimePrefs = timerHelpers.getApiFromTimePreferences(day)
-        var toIdealTimePrefs = timerHelpers.getApiToIdealTimePreferences(day)
-        var toLogicTimePrefs = timerHelpers.getApiToLogicTimePreferences(day)
         lockTV(day)
 //        Log.d(TAG2,"another day :: fromTime -- ${timerHelpers.getApiFromTimePreferences(6)} :: toTime -- ${timerHelpers.getApiToTimePreferences(6)}")
     }
@@ -243,31 +313,13 @@ class ApiCall(context: Context) {
             var mins = futureDate[Calendar.MINUTE]
             var secs = futureDate[Calendar.SECOND]
 
-            /* if times from api is greater than system time then only schedules the alarm */
-            if (calApiFromTime > systemCurrentTime || calApiToIdealTime > systemCurrentTime || calApiToLogicTime > systemCurrentTime) {
-                var cal: Calendar? = null
-                if (calApiFromTime > systemCurrentTime) {
-                    cal = apiFromTime
-                } else if (calApiToIdealTime > systemCurrentTime) {
-                    cal = apiToIdealTime
-                } else if (calApiToLogicTime > systemCurrentTime) {
-                    cal = apiToLogicTime
-                } else {
-                    cal = apiFromTime
-                }
-                Log.d(
-                    TAG,
-                    "${cal!![Calendar.HOUR_OF_DAY]} :: ${cal[Calendar.MINUTE]}:: ${cal[Calendar.SECOND]}"
-                )
+            /* starts service to initiate handle screen on/off*/
+            startService()
 
-                /* starts service to initiate handle screen on/off*/
-                startService()
-
-            } else {
-                if (!MainActivity.wakeLock.isHeld) {
-                    MainActivity.wakeLock.acquire()
-                }
+            if (!MainActivity.wakeLock.isHeld) {
+                MainActivity.wakeLock.acquire()
             }
+
         } catch (e: Exception) {
             Toast.makeText(
                 context,

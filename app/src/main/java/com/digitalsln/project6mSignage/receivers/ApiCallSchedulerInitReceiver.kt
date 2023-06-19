@@ -26,6 +26,8 @@ class ApiCallSchedulerInitReceiver:BroadcastReceiver() {
             "starting api scheduler...",
             Toast.LENGTH_SHORT
         ).show()
-        am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
+//        am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
+        val ac = AlarmManager.AlarmClockInfo(futureDate.time.time, pi)
+        am.setAlarmClock(ac,pi)
     }
 }

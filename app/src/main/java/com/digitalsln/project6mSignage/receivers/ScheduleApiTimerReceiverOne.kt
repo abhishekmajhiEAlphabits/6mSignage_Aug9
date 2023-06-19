@@ -26,7 +26,9 @@ class ScheduleApiTimerReceiverOne : BroadcastReceiver() {
         Log.d("TvTimer","inside api 1 :: ${futureDate.time}")
         futureDate.add(Calendar.HOUR_OF_DAY, 24)
         Log.d("TvTimer","${futureDate.time}")
-        am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
+//        am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
+        val ac = AlarmManager.AlarmClockInfo(futureDate.time.time, pi)
+        am.setAlarmClock(ac,pi)
     }
 
 }
