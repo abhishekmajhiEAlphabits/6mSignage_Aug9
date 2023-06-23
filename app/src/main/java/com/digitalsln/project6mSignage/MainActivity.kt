@@ -19,6 +19,7 @@ import android.util.Log
 import android.view.KeyEvent
 import android.view.ViewGroup
 import android.webkit.*
+import android.widget.RadioButton
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -30,6 +31,7 @@ import com.digitalsln.project6mSignage.appUtils.TimerHelpers
 import com.digitalsln.project6mSignage.databinding.ActivityMainBinding
 import com.digitalsln.project6mSignage.databinding.HandMadeStartAppDialogBinding
 import com.digitalsln.project6mSignage.databinding.PlayModeDialogBinding
+import com.digitalsln.project6mSignage.databinding.PlaySettingsDialogBinding
 import com.digitalsln.project6mSignage.model.TimeData
 import com.digitalsln.project6mSignage.network.ApiClient
 import com.digitalsln.project6mSignage.network.ApiInterface
@@ -51,6 +53,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     private lateinit var dialogBinding: HandMadeStartAppDialogBinding
     private var _binding: ActivityMainBinding? = null
     private var playModeDialog: Dialog? = null
+    private var playSettingsDialog: Dialog? = null
     private var hostIP: String? = null
     private var connection: DeviceConnection? = null
     private var service: Intent? = null
@@ -655,6 +658,67 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
     }
 
+    private fun showPlaySettingsDialog() {
+        val dialogBinding = PlaySettingsDialogBinding.inflate(layoutInflater)
+
+        playSettingsDialog = Dialog(this).apply {
+            setContentView(dialogBinding.root)
+            window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setOnCancelListener {
+            }
+        }
+
+        dialogBinding.run {
+            btnWeb.setOnClickListener {
+                playSettingsDialog!!.dismiss()
+                AppPreference(this@MainActivity).saveKeyValue(LAST_WEB_URL, REAL_URL)
+                binding.webView.loadUrl(REAL_URL)
+                dialog.dismiss()
+            }
+
+            btnNative.setOnClickListener {
+                playSettingsDialog!!.dismiss()
+
+                dialog.dismiss()
+            }
+
+            radioGroup.setOnCheckedChangeListener { group, checkedId ->
+                // Get the selected Radio Button
+                val radioButton = group
+                    .findViewById(checkedId) as RadioButton
+
+                // on below line we are setting
+                // text for our status text view.
+                AppPreference(this@MainActivity).saveKeyValue(
+                    checkedId.toString(),
+                    "PLAY_SETTINGS_MODE"
+                )
+                Toast.makeText(applicationContext, "${radioButton.text}", Toast.LENGTH_LONG)
+                    .show()
+                Log.d(TAG2, "${radioButton.text}")
+            }
+        }
+        playSettingsDialog?.show()
+    }
+
+    private fun showPlaySettingsButtons() {
+        playSettingsDialog?.findViewById<ViewGroup>(R.id.rootLayouts)?.let {
+            PlaySettingsDialogBinding.bind(it).run {
+                btnWeb.isVisible = true
+                btnNative.isVisible = true
+                var savedPlaySetting = AppPreference(this@MainActivity).retrieveValueByKey(
+                    "PLAY_SETTINGS_MODE",
+                    "-1"
+                ).toInt()
+                if (savedPlaySetting != null && savedPlaySetting != -1) {
+                    radioGroup.check(savedPlaySetting)
+                }
+
+            }
+        }
+        Log.d(TAG, "codes is shown")
+    }
+
     private fun startConnecting() {
         if (isDeveloperOptionEnabled()) {
             initServiceConnection()
@@ -805,9 +869,9 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
             btPlay.setOnClickListener {
                 dialog.dismiss()
-                AppPreference(this@MainActivity).saveKeyValue(LAST_WEB_URL, REAL_URL)
-                binding.webView.loadUrl(REAL_URL)
                 startScheduler()
+                showPlaySettingsDialog()
+                showPlaySettingsButtons()
             }
 
             btPlayMode.setOnClickListener {

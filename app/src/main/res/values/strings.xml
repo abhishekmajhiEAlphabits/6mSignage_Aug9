@@ -26,7 +26,7 @@
     <!--    Non auto setting dialog-->
     <string name="reset_all_settings">Reset All settings</string>
     <string name="play_mode">Play mode</string>
-    <string name="play">Play</string>
+    <string name="play">Play Settings</string>
     <!--    Non auto setting dialog-->
 
     <!--    Play mode dialog-->
@@ -41,5 +41,9 @@
     <string name="yes">Yes</string>
     <string name="make_app_default">Make App Default</string>
     <string name="open_tv_settings">Open TV Settings</string>
+
+    <!--    Play settings dialog-->
+    <string name="web">Web</string>
+    <string name="natives">Native</string>
 
 </resources>
