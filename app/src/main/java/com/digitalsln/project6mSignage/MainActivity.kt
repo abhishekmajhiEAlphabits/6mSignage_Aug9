@@ -63,6 +63,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     private lateinit var powerManager: PowerManager
     private lateinit var timerHelpers: TimerHelpers
     private lateinit var networkChangeReceiver: NetworkChangeReceiver
+    private lateinit var startUpBroadcastReceiver: StartUpBroadcastReceiver
     private lateinit var appLogger: AppLogger
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -117,7 +118,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
             /* Fetches the screen code from the browser localStorage and stores in preferences */
             binding.webView.setWebChromeClient(object : WebChromeClient() {
-
                 override fun onConsoleMessage(message: String, lineNumber: Int, sourceID: String) {
                     binding.webView.evaluateJavascript("javascript:window.localStorage.getItem('signageScreenCode')",
                         ValueCallback<String?> { s ->
@@ -142,6 +142,12 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         }
 
         showHandMadeStartAppDialog()
+        if (intent.hasExtra("boot")) {
+            Log.d(TAG2, "we are from boot receiver class")
+            cancelMultipleAlarms()
+            callApi()
+            scheduleApiCallTimer()
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -342,6 +348,12 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                         if (response.isSuccessful) {
 //                            Toast.makeText(applicationContext, "" + response, Toast.LENGTH_LONG)
 //                                .show()
+                            Toast.makeText(
+                                applicationContext,
+                                "Refreshed Successfully!",
+                                Toast.LENGTH_LONG
+                            )
+                                .show()
 
                             if (response.body() != null) {
                                 val cal = Calendar.getInstance()
@@ -574,11 +586,19 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 networkChangeReceiver,
                 IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
             )
+            registerReceiver(
+                startUpBroadcastReceiver,
+                IntentFilter(Intent.ACTION_BOOT_COMPLETED)
+            )
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             registerReceiver(
                 networkChangeReceiver,
                 IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
+            )
+            registerReceiver(
+                startUpBroadcastReceiver,
+                IntentFilter(Intent.ACTION_BOOT_COMPLETED)
             )
         }
     }
@@ -994,6 +1014,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         ConfirmDialog.closeDialogs()
         SpinnerDialog.closeDialogs()
         unregisterReceiver(networkChangeReceiver);
+        unregisterReceiver(startUpBroadcastReceiver)
         super.onDestroy()
     }
 
