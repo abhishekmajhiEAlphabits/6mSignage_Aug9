@@ -120,7 +120,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
             /* Fetches the screen code from the browser localStorage and stores in preferences */
             binding.webView.setWebChromeClient(object : WebChromeClient() {
-
                 override fun onConsoleMessage(message: String, lineNumber: Int, sourceID: String) {
                     binding.webView.evaluateJavascript("javascript:window.localStorage.getItem('signageScreenCode')",
                         ValueCallback<String?> { s ->
@@ -145,6 +144,17 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         }
 
         showHandMadeStartAppDialog()
+        syncTimer()
+    }
+
+    /**
+     * Below function is used to sync the timer in case when app opens
+     * -> This scenario will be help when device reboots & off when call api at 12:00 am and due to OFF it was not called.
+     */
+    private fun syncTimer()
+    {
+        refreshButtonCall()
+        scheduleApiCallTimer()
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -345,6 +355,12 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                         if (response.isSuccessful) {
 //                            Toast.makeText(applicationContext, "" + response, Toast.LENGTH_LONG)
 //                                .show()
+                            Toast.makeText(
+                                applicationContext,
+                                "Refreshed Successfully!",
+                                Toast.LENGTH_LONG
+                            )
+                                .show()
 
                             if (response.body() != null) {
                                 val cal = Calendar.getInstance()

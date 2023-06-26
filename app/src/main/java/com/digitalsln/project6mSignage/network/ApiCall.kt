@@ -64,6 +64,8 @@ class ApiCall(context: Context) {
                         if (response.isSuccessful) {
 //                            Toast.makeText(context, "" + response, Toast.LENGTH_LONG)
 //                                .show()
+                            Toast.makeText(context, "Refreshed Successfully!", Toast.LENGTH_LONG)
+                                .show()
 
                             if (response.body() != null) {
                                 val cal = Calendar.getInstance()
