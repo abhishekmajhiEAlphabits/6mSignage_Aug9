@@ -63,7 +63,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     private lateinit var powerManager: PowerManager
     private lateinit var timerHelpers: TimerHelpers
     private lateinit var networkChangeReceiver: NetworkChangeReceiver
-    private lateinit var startUpBroadcastReceiver: StartUpBroadcastReceiver
     private lateinit var appLogger: AppLogger
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -142,12 +141,17 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         }
 
         showHandMadeStartAppDialog()
-        if (intent.hasExtra("boot")) {
-            Log.d(TAG2, "we are from boot receiver class")
-            cancelMultipleAlarms()
-            callApi()
-            scheduleApiCallTimer()
-        }
+        syncTimer()
+    }
+
+    /**
+     * Below function is used to sync the timer in case when app opens
+     * -> This scenario will be help when device reboots & off when call api at 12:00 am and due to OFF it was not called.
+     */
+    private fun syncTimer()
+    {
+        refreshButtonCall()
+        scheduleApiCallTimer()
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -586,19 +590,11 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 networkChangeReceiver,
                 IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
             )
-            registerReceiver(
-                startUpBroadcastReceiver,
-                IntentFilter(Intent.ACTION_BOOT_COMPLETED)
-            )
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             registerReceiver(
                 networkChangeReceiver,
                 IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
-            )
-            registerReceiver(
-                startUpBroadcastReceiver,
-                IntentFilter(Intent.ACTION_BOOT_COMPLETED)
             )
         }
     }
@@ -1014,7 +1010,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         ConfirmDialog.closeDialogs()
         SpinnerDialog.closeDialogs()
         unregisterReceiver(networkChangeReceiver);
-        unregisterReceiver(startUpBroadcastReceiver)
         super.onDestroy()
     }
 

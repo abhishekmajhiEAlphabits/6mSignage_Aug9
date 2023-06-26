@@ -77,18 +77,6 @@
         <receiver android:name=".receivers.ScheduleApiTimerReceiverTwo" />
         <receiver android:name=".receivers.ApiCallSchedulerInitReceiver" />
         <receiver android:name=".receivers.NetworkChangeReceiver" />
-        <receiver
-            android:name=".receivers.StartUpBroadcastReceiver"
-            android:enabled="true"
-            android:exported="true">
-            <intent-filter>
-                <category android:name="android.intent.category.DEFAULT" />
 
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.BOOT" />
-                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
-                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-            </intent-filter>
-        </receiver>
     </application>
 </manifest>
