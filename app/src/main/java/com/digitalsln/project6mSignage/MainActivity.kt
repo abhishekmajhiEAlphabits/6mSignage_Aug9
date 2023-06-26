@@ -17,6 +17,7 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
 import android.view.KeyEvent
+import android.view.View
 import android.view.ViewGroup
 import android.webkit.*
 import android.widget.RadioButton
@@ -35,6 +36,8 @@ import com.digitalsln.project6mSignage.databinding.PlaySettingsDialogBinding
 import com.digitalsln.project6mSignage.model.TimeData
 import com.digitalsln.project6mSignage.network.ApiClient
 import com.digitalsln.project6mSignage.network.ApiInterface
+import com.digitalsln.project6mSignage.network.PlaylistManager
+import com.digitalsln.project6mSignage.network.RegisterScreen
 import com.digitalsln.project6mSignage.receivers.*
 import com.digitalsln.project6mSignage.tvLauncher.dialogs.ConfirmDialog
 import com.digitalsln.project6mSignage.tvLauncher.dialogs.SpinnerDialog
@@ -67,6 +70,8 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     private lateinit var timerHelpers: TimerHelpers
     private lateinit var networkChangeReceiver: NetworkChangeReceiver
     private lateinit var appLogger: AppLogger
+    private lateinit var registerScreen: RegisterScreen
+    private lateinit var playlistManager: PlaylistManager
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -113,6 +118,8 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             wakeLock.acquire()
 
             appLogger = AppLogger()
+            registerScreen = RegisterScreen(applicationContext)
+            playlistManager = PlaylistManager(applicationContext)
             timerHelpers = TimerHelpers(applicationContext)
             networkChangeReceiver = NetworkChangeReceiver()
             registerNetworkBroadcastForNougat()
@@ -124,6 +131,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                     binding.webView.evaluateJavascript("javascript:window.localStorage.getItem('signageScreenCode')",
                         ValueCallback<String?> { s ->
                             var s = s.replace("\"", "")
+//                            Toast.makeText(applicationContext,"Screen code :: $s",Toast.LENGTH_SHORT).show()
                             AppPreference(this@MainActivity).saveExternalScreenCode(
                                 s,
                                 Constants.externalScreenCode
@@ -151,8 +159,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
      * Below function is used to sync the timer in case when app opens
      * -> This scenario will be help when device reboots & off when call api at 12:00 am and due to OFF it was not called.
      */
-    private fun syncTimer()
-    {
+    private fun syncTimer() {
         refreshButtonCall()
         scheduleApiCallTimer()
     }
@@ -667,7 +674,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             } else {
                 Log.d(TAG2, "!first")
             }
-
+            playlistManager.deleteNDownloadData()
         } catch (e: Exception) {
             Log.d(TAG2, "$e")
         }
@@ -693,8 +700,20 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             }
 
             btnNative.setOnClickListener {
+                binding.webView.stopLoading()
+                binding.webView.visibility = View.GONE
                 playSettingsDialog!!.dismiss()
-
+                var isScreenRegistered = AppPreference(this@MainActivity).isScreenRegistered()
+                var isPlaylistBound = AppPreference(this@MainActivity).isPlaylistBound()
+                var nativeScreenCode = AppPreference(this@MainActivity).retrieveValueByKey(
+                    Constants.nativeScreenCode,
+                    Constants.defaultNativeScreenCode
+                )
+                if (isScreenRegistered && isPlaylistBound) {
+                    startActivity(Intent(applicationContext, SlideShowActivity::class.java))
+                } else {
+                    registerScreen.registerScreen()
+                }
                 dialog.dismiss()
             }
 
@@ -709,8 +728,8 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                     checkedId.toString(),
                     "PLAY_SETTINGS_MODE"
                 )
-                Toast.makeText(applicationContext, "${radioButton.text}", Toast.LENGTH_LONG)
-                    .show()
+//                Toast.makeText(applicationContext, "${checkedId}", Toast.LENGTH_LONG)
+//                    .show()
                 Log.d(TAG2, "${radioButton.text}")
             }
         }
@@ -718,6 +737,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     }
 
     private fun showPlaySettingsButtons() {
+        val isFirstRunSetting = AppPreference(this@MainActivity).isFirstTimeRunSettings()
         playSettingsDialog?.findViewById<ViewGroup>(R.id.rootLayouts)?.let {
             PlaySettingsDialogBinding.bind(it).run {
                 btnWeb.isVisible = true
@@ -726,8 +746,16 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                     "PLAY_SETTINGS_MODE",
                     "-1"
                 ).toInt()
+//                if (isFirstRunSetting) {
+//                    radioGroup.check(R.id.btnWeb)
+//                    radioGroup.requestFocusFromTouch()
+//                    radioGroup.requestFocus()
+//                    AppPreference(this@MainActivity).setFirstTimeRunSettings(false)
+//                }
                 if (savedPlaySetting != null && savedPlaySetting != -1) {
                     radioGroup.check(savedPlaySetting)
+                    radioGroup.requestFocusFromTouch()
+                    radioGroup.requestFocus()
                 }
 
             }
@@ -884,7 +912,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             }
 
             btPlay.setOnClickListener {
-                dialog.dismiss()
+//                dialog.dismiss()
                 startScheduler()
                 showPlaySettingsDialog()
                 showPlaySettingsButtons()

@@ -101,6 +101,33 @@ class AppPreference(context: Context) {
         sharedPreference!!.edit().putBoolean("FIRST_RUN", flag).apply()
     }
 
+    fun isScreenRegistered(): Boolean {
+        if (sharedPreference == null) return false
+        return sharedPreference!!.getBoolean("SCREEN_REGISTERED", false)
+    }
 
+    fun setScreenRegistered(flag: Boolean) {
+        if (sharedPreference == null) return
+        sharedPreference!!.edit().putBoolean("SCREEN_REGISTERED", flag).apply()
+    }
 
+    fun isPlaylistBound(): Boolean {
+        if (sharedPreference == null) return false
+        return sharedPreference!!.getBoolean("PLAYLIST_BOUND", false)
+    }
+
+    fun setPlaylistBound(flag: Boolean) {
+        if (sharedPreference == null) return
+        sharedPreference!!.edit().putBoolean("PLAYLIST_BOUND", flag).apply()
+    }
+
+    fun isFirstTimeRunSettings(): Boolean {
+        if (sharedPreference == null) return false
+        return sharedPreference!!.getBoolean("FIRST_SETTINGS", true)
+    }
+
+    fun setFirstTimeRunSettings(flag: Boolean) {
+        if (sharedPreference == null) return
+        sharedPreference!!.edit().putBoolean("FIRST_SETTINGS", flag).apply()
+    }
 }

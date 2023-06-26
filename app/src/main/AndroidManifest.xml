@@ -17,7 +17,6 @@
     <uses-permission
         android:name="android.permission.WRITE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
-
     <uses-permission
         android:name="android.permission.ACCESS_WIFI_STATE"
         tools:ignore="LeanbackUsesWifi" />
@@ -38,7 +37,6 @@
         android:name="android.software.leanback"
         android:required="true" />
 
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -46,7 +44,20 @@
         android:requestLegacyExternalStorage="true"
         android:supportsRtl="true"
         android:theme="@style/Theme.project6mSignage">
-
+        <activity
+            android:name=".SlideShowActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
+        <activity
+            android:name=".PlaylistNotBoundActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
+        </activity>
         <activity
             android:name=".MainActivity"
             android:banner="@drawable/ic_launcher"
@@ -59,6 +70,7 @@
             android:showOnLockScreen="true">
             <intent-filter>
                 <category android:name="android.intent.category.HOME" />
+
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
@@ -77,6 +89,6 @@
         <receiver android:name=".receivers.ScheduleApiTimerReceiverTwo" />
         <receiver android:name=".receivers.ApiCallSchedulerInitReceiver" />
         <receiver android:name=".receivers.NetworkChangeReceiver" />
-
     </application>
+
 </manifest>

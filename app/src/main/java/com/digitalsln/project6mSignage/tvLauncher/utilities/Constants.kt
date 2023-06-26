@@ -13,4 +13,8 @@ object Constants {
     const val defaultToLogicTime = "00:00:00"
     const val timeOut = "TIME_OUT"
     const val defaultTimeOut = "300000"
+
+    //slideShow constants
+    const val nativeScreenCode = "NATIVE_SCREEN_CODE"
+    const val defaultNativeScreenCode = "NA"
 }

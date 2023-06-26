@@ -4,7 +4,8 @@
     android:id="@+id/rootLayouts"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/dialog_primary">
+    android:background="@color/dialog_primary"
+    android:padding="60dp">
 
     <!--on below line we are creating a radio group-->
     <RadioGroup
@@ -13,33 +14,37 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:gravity="center"
+        android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <!--on below line we are creating a radio buttons-->
-        <RadioButton
-            android:id="@+id/btnWeb"
-            android:layout_width="150dp"
-            android:layout_height="wrap_content"
-            android:buttonTint="@color/text_primary"
-            android:padding="4dp"
-            android:text="@string/web"
-            android:textAlignment="center"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp" />
 
-        <RadioButton
-            android:id="@+id/btnNative"
-            android:layout_width="150dp"
-            android:layout_height="wrap_content"
-            android:buttonTint="@color/text_primary"
-            android:padding="4dp"
-            android:text="@string/natives"
-            android:textAlignment="center"
-            android:textColor="@color/text_primary"
-            android:textSize="20sp" />
+
+            <!--on below line we are creating a radio buttons-->
+            <RadioButton
+                android:id="@+id/btnWeb"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:buttonTint="@color/text_primary"
+                android:padding="4dp"
+                android:text="@string/web"
+                android:textAlignment="center"
+                android:textColor="@color/text_primary"
+                android:textSize="20sp" />
+
+            <RadioButton
+                android:id="@+id/btnNative"
+                android:layout_width="150dp"
+                android:layout_height="wrap_content"
+                android:buttonTint="@color/text_primary"
+                android:padding="4dp"
+                android:text="@string/natives"
+                android:textAlignment="center"
+                android:textColor="@color/text_primary"
+                android:textSize="20sp" />
+
 
 
     </RadioGroup>

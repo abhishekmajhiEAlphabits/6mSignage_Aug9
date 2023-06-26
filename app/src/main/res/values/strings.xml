@@ -22,7 +22,7 @@
     <string name="dialog_exit_do_you_want_to_close_app">Do you want to reset all settings?</string>
     <string name="dialog_exit_no">No</string>
     <string name="dialog_exit_yes">Yes</string>
-    
+
     <!--    Non auto setting dialog-->
     <string name="reset_all_settings">Reset All settings</string>
     <string name="play_mode">Play mode</string>
@@ -45,5 +45,9 @@
     <!--    Play settings dialog-->
     <string name="web">Web</string>
     <string name="natives">Native</string>
+
+    <!--    PlaylistNotBoundActivity-->
+    <string name="screen_code">...</string>
+    <string name="screen_not_bound">Screen is not yet bound to any playlist</string>
 
 </resources>
