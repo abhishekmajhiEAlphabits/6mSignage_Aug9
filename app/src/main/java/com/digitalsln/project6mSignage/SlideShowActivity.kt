@@ -25,6 +25,7 @@ class SlideShowActivity : AppCompatActivity() {
     private lateinit var downloadsReceiver: DownloadsReceiver
     private lateinit var fileDescriptors: ArrayList<FileDescriptors>
     private lateinit var playlistManager: PlaylistManager
+    private val TAG = "TvTimer"
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,23 +58,23 @@ class SlideShowActivity : AppCompatActivity() {
             downloadsReceiver = DownloadsReceiver()
             registerDownloadReceiver()
 
-            Log.d("abhi", "descripMain :: $fileDescriptors")
+            Log.d(TAG, "descripMain :: $fileDescriptors")
 
             getMediaFilePaths()
             setupObservers()
         } catch (e: Exception) {
-            Log.d("abhi", "error in onCreate :: $e")
+            Log.d(TAG, "error in onCreate :: $e")
         }
     }
 
     private fun setupObservers() {
         downloadsReceiver.downloadState.observe(this, Observer {
-            Log.d("abhi", "inside observer")
+            Log.d(TAG, "inside observer")
             getMediaFilePaths()
             adapter!!.setFileDescriptors(fileDescriptors)
         })
         playlistManager.fileDescriptorData.observe(this, Observer {
-            Log.d("abhi", "inside file observer")
+            Log.d(TAG, "inside file observer")
             getMediaFilePaths()
             adapter!!.setFileDescriptors(fileDescriptors)
         })
@@ -119,7 +120,7 @@ class SlideShowActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    companion object{
+    companion object {
         private const val TAG = "SlideShowActivity"
     }
 }

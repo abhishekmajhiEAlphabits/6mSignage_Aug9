@@ -30,7 +30,7 @@ class RegisterScreen(context: Context) {
                 .registerScreen(screenSize).enqueue(object : Callback<String> {
                     override fun onResponse(call: Call<String>, response: Response<String>) {
                         if (response.isSuccessful && response.body() != null) {
-                            Log.d("abhi", "${response.body()}")
+                            Log.d(TAG, "${response.body()}")
                             var nativeScreenCode = response.body()
                             AppPreference(context).saveKeyValue(
                                 nativeScreenCode!!,
@@ -48,12 +48,12 @@ class RegisterScreen(context: Context) {
                             Toast.LENGTH_LONG
                         )
                             .show()
-                        Log.d("abhi", "$t")
+                        Log.d(TAG, "$t")
                     }
                 })
 
         } catch (e: Exception) {
-            Log.d("abhi", "$e")
+            Log.d(TAG, "$e")
         }
     }
 
@@ -99,7 +99,7 @@ class RegisterScreen(context: Context) {
                     }
                 })
         } catch (e: Exception) {
-            Log.d("abhi", "$e")
+            Log.d(TAG, "$e")
         }
 
     }
@@ -116,15 +116,15 @@ class RegisterScreen(context: Context) {
                 var intent = Intent(context, SlideShowActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
-                Log.d("abhi", "inside slide")
+                Log.d(TAG, "inside slide")
             } else {
                 var intent = Intent(context, PlaylistNotBoundActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 context.startActivity(intent)
-                Log.d("abhi", "inside not bound")
+                Log.d(TAG, "inside not bound")
             }
         } catch (e: Exception) {
-            Log.d("abhi", "$e")
+            Log.d(TAG, "$e")
         }
 
     }
@@ -132,7 +132,7 @@ class RegisterScreen(context: Context) {
     private fun apiCronJob() {
         autoApiCallHandler.postDelayed(Runnable {
             bindPlaylistForScreen()
-            Log.d("abhi", "inside cron job")
+            Log.d(TAG, "inside cron job")
         }, 10000L)
     }
 

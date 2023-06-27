@@ -18,7 +18,7 @@ import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.qualifiers.ApplicationContext
 
 class FirebaseMessageService : FirebaseMessagingService() {
-    private val TAG = "abhi"
+    private val TAG = "TvTimer"
 
 
     private var playlistManager = PlaylistManager(this)
