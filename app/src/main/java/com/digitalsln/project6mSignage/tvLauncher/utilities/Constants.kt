@@ -17,4 +17,37 @@ object Constants {
     //slideShow constants
     const val nativeScreenCode = "NATIVE_SCREEN_CODE"
     const val defaultNativeScreenCode = "NA"
+
+    const val id = "ID"
+    const val defaultId = "0"
+
+    const val contentType = "CONTENT_TYPE"
+    const val defaultContentType = "2"
+
+    const val slideContentUrl = "CONTENT_URL"
+    const val defaultSlideContentUrl = "NA"
+
+    const val autoReplayVideo = "AUTO_REPLAY"
+    const val defaultAutoReplayVideo = "AUTO_REPLAY"
+
+    const val interval = "INTERVAL"
+    const val defaultInterval = "10"
+
+    const val fromDate = "FROM_DATE"
+    const val defaultFromDate = "FROM_DATE"
+
+    const val toDate = "TO_DATE"
+    const val defaultToDate = "TO_DATE"
+
+    const val fromTimeSlide = "FROM_TIME"
+    const val defaultFromTimeSlide = "FROM_TIME"
+
+    const val toTimeSlide = "TO_TIME"
+    const val defaultToTimeSlide = "TO_TIME"
+
+    const val days = "DAYS"
+    const val defaultDays = "DAYS"
+
+    const val playlistSize = "PLAYLIST_SIZE"
+    const val defaultPlaylistSize = "6"
 }

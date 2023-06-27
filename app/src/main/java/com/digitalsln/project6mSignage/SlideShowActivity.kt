@@ -22,15 +22,9 @@ class SlideShowActivity : AppCompatActivity() {
 
     private lateinit var viewPager: LoopingViewPager
     private var adapter: DemoInfiniteAdapter? = null
-
-    private var counter = 0
-
-    private var i = 2
-
     private lateinit var downloadsReceiver: DownloadsReceiver
     private lateinit var fileDescriptors: ArrayList<FileDescriptors>
     private lateinit var playlistManager: PlaylistManager
-
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -97,7 +91,7 @@ class SlideShowActivity : AppCompatActivity() {
     @RequiresApi(Build.VERSION_CODES.M)
     private fun getStoragePermission(): Boolean {
         if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            Log.d("abhi", "Permission is granted")
+            Log.d(TAG, "Permission is granted")
             //File write logic here
             return true
         } else {
@@ -115,7 +109,7 @@ class SlideShowActivity : AppCompatActivity() {
         try {
             setupObservers()
         } catch (e: Exception) {
-            Log.d("abhi", "error :: $e")
+            Log.d(TAG, "error :: $e")
         }
         super.onResume()
     }
@@ -123,5 +117,9 @@ class SlideShowActivity : AppCompatActivity() {
     override fun onDestroy() {
         unregisterReceiver(downloadsReceiver)
         super.onDestroy()
+    }
+
+    companion object{
+        private const val TAG = "SlideShowActivity"
     }
 }

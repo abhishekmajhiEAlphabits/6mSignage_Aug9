@@ -43,6 +43,8 @@ import com.digitalsln.project6mSignage.tvLauncher.dialogs.ConfirmDialog
 import com.digitalsln.project6mSignage.tvLauncher.dialogs.SpinnerDialog
 import com.digitalsln.project6mSignage.tvLauncher.utilities.*
 import com.digitalsln.project6mSignage.tvLauncher.utilities.Utils.isNetworkAvailable
+import com.google.android.gms.tasks.OnCompleteListener
+import com.google.firebase.messaging.FirebaseMessaging
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -123,6 +125,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             timerHelpers = TimerHelpers(applicationContext)
             networkChangeReceiver = NetworkChangeReceiver()
             registerNetworkBroadcastForNougat()
+            initFirebase()
 
 
             /* Fetches the screen code from the browser localStorage and stores in preferences */
@@ -151,6 +154,9 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             Log.d(TAG2, "error : $e")
         }
 
+        binding.webView.isEnabled = false
+        binding.webView.isVisible = false
+        binding.webView.visibility = View.GONE
         showHandMadeStartAppDialog()
         syncTimer()
     }
@@ -167,7 +173,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     @RequiresApi(Build.VERSION_CODES.M)
     private fun getStoragePermission(): Boolean {
         if (checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            Log.d("abhi", "Permission is granted")
+            Log.d(TAG2, "Permission is granted")
             //File write logic here
             return true
         } else {
@@ -200,6 +206,22 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             startActivity(myIntent)
         }
 
+    }
+
+    private fun initFirebase() {
+        FirebaseMessaging.getInstance().isAutoInitEnabled = true
+
+        FirebaseMessaging.getInstance().subscribeToTopic("notification")
+
+        FirebaseMessaging.getInstance().token
+            .addOnCompleteListener { task ->
+                    if (!task.isSuccessful) {
+                        Log.d("ravi", "Task Failed")
+                        return@addOnCompleteListener
+                    }
+                    Log.d("ravi", "The result: " + task.result)
+
+            }
     }
 
     @SuppressLint("InvalidWakeLockTag", "ShortAlarm")
@@ -674,7 +696,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             } else {
                 Log.d(TAG2, "!first")
             }
-            playlistManager.deleteNDownloadData()
         } catch (e: Exception) {
             Log.d(TAG2, "$e")
         }
@@ -693,6 +714,8 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
         dialogBinding.run {
             btnWeb.setOnClickListener {
+                binding.webView.isEnabled = true
+                binding.webView.isVisible = true
                 playSettingsDialog!!.dismiss()
                 AppPreference(this@MainActivity).saveKeyValue(LAST_WEB_URL, REAL_URL)
                 binding.webView.loadUrl(REAL_URL)
@@ -701,7 +724,8 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
             btnNative.setOnClickListener {
                 binding.webView.stopLoading()
-                binding.webView.visibility = View.GONE
+                binding.webView.isEnabled = false
+                binding.webView.isVisible = false
                 playSettingsDialog!!.dismiss()
                 var isScreenRegistered = AppPreference(this@MainActivity).isScreenRegistered()
                 var isPlaylistBound = AppPreference(this@MainActivity).isPlaylistBound()
@@ -714,7 +738,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 } else {
                     registerScreen.registerScreen()
                 }
-                dialog.dismiss()
+//                dialog.dismiss()
             }
 
             radioGroup.setOnCheckedChangeListener { group, checkedId ->
@@ -728,6 +752,8 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                     checkedId.toString(),
                     "PLAY_SETTINGS_MODE"
                 )
+                radioButton.requestFocus()
+                radioButton.requestFocusFromTouch()
 //                Toast.makeText(applicationContext, "${checkedId}", Toast.LENGTH_LONG)
 //                    .show()
                 Log.d(TAG2, "${radioButton.text}")
@@ -746,16 +772,12 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                     "PLAY_SETTINGS_MODE",
                     "-1"
                 ).toInt()
-//                if (isFirstRunSetting) {
-//                    radioGroup.check(R.id.btnWeb)
-//                    radioGroup.requestFocusFromTouch()
-//                    radioGroup.requestFocus()
-//                    AppPreference(this@MainActivity).setFirstTimeRunSettings(false)
-//                }
+                if (isFirstRunSetting) {
+                    radioGroup.check(R.id.btnWeb)
+                    AppPreference(this@MainActivity).setFirstTimeRunSettings(false)
+                }
                 if (savedPlaySetting != null && savedPlaySetting != -1) {
                     radioGroup.check(savedPlaySetting)
-                    radioGroup.requestFocusFromTouch()
-                    radioGroup.requestFocus()
                 }
 
             }
@@ -871,12 +893,12 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 //        if (!isNetworkAvailable(this))  //offline
 //            binding.webView.settings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
 
-        binding.webView.loadUrl(
-            AppPreference(this@MainActivity).retrieveValueByKey(
-                LAST_WEB_URL,
-                REAL_URL
-            )
-        )
+//        binding.webView.loadUrl(
+//            AppPreference(this@MainActivity).retrieveValueByKey(
+//                LAST_WEB_URL,
+//                REAL_URL
+//            )
+//        )
     }
 
     override fun dispatchKeyEvent(event: KeyEvent?): Boolean {
@@ -912,7 +934,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             }
 
             btPlay.setOnClickListener {
-//                dialog.dismiss()
                 startScheduler()
                 showPlaySettingsDialog()
                 showPlaySettingsButtons()
@@ -945,6 +966,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
             btRefresh.setOnClickListener {
                 refreshButtonCall()
+                playlistManager.deleteNDownloadData()
             }
         }
     }
@@ -1110,7 +1132,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         /* Tell the service about our UI state change */
         hostIP = Utils.getIpAddress(this)
 
-        binding.webView.reload()
+//        binding.webView.reload()
 
         if (binder != null) {
             binder!!.notifyResumingActivity(connection!!)

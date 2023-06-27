@@ -1,26 +1,36 @@
 {
   "project_info": {
-    "project_number": "185222218729",
-    "project_id": "signageandroidapp",
-    "storage_bucket": "signageandroidapp.appspot.com"
+    "project_number": "851609811529",
+    "project_id": "msignage-c403a",
+    "storage_bucket": "msignage-c403a.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:185222218729:android:1f9bdd2a2e1cdd03ff0178",
+        "mobilesdk_app_id": "1:851609811529:android:d7bfb67ab4c503d073dd98",
         "android_client_info": {
           "package_name": "com.digitalsln.project6mSignage"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "851609811529-ojlvoivl93t8ko77kk12ggmumf4bmtuo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyA8-chPnX3bvB87Op874q-4DZy27tlRc1I"
+          "current_key": "AIzaSyC1XzLs0R29oMw5bwGJ3Eka02voXi1yXCM"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "851609811529-ojlvoivl93t8ko77kk12ggmumf4bmtuo.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -10,6 +10,7 @@ import androidx.viewpager.widget.ViewPager
 import com.digitalsln.project6mSignage.R
 import com.digitalsln.project6mSignage.network.PlaylistManager
 import com.digitalsln.project6mSignage.tvLauncher.utilities.AppPreference
+import com.digitalsln.project6mSignage.tvLauncher.utilities.Constants
 
 
 /**
@@ -24,6 +25,7 @@ class LoopingViewPager : ViewPager {
     var counter = 0
     private lateinit var playlistManager: PlaylistManager
     private lateinit var slideDurations: LongArray
+    private val TAG = "TvTimer"
 
     //AutoScroll
     private var interval = 5000
@@ -69,17 +71,20 @@ class LoopingViewPager : ViewPager {
 
     private fun fillData() {
         slideDurations = staticDurations
-        var localScreenCode = AppPreference(context).retrieveValueByKey("LOCAL_SCREEN_CODE", "NA")
+        var nativeScreenCode = AppPreference(context).retrieveValueByKey(
+            Constants.nativeScreenCode,
+            Constants.defaultNativeScreenCode
+        )
         val responseSize = AppPreference(context).retrieveValueByKey("PLAYLIST_SIZE", "6")
         if (responseSize.toInt() != null && responseSize.toInt() != 0) {
             for (i in 0 until responseSize.toInt()) {
                 slideDurations[i] =
                     AppPreference(context).retrieveValueByKey(
-                        "$localScreenCode-$i-INTERVAL",
-                        "10"
+                        "$nativeScreenCode-$i-${Constants.interval}",
+                        Constants.defaultInterval
                     ).toLong() * 1000
             }
-            Log.d("abhi", "slideDuration :: ${slideDurations.size}")
+            Log.d(TAG, "slideDuration :: ${slideDurations.size}")
         }
     }
 
@@ -100,7 +105,7 @@ class LoopingViewPager : ViewPager {
                 if (isAutoScrollResumed) {
                     autoScrollHandler.removeCallbacks(autoScrollRunnable)
                     var duration = slideDurations[position - 1]
-                    Log.d("abhi", "duration :: $duration")
+                    Log.d(TAG, "duration :: $duration")
                     autoScrollHandler.postDelayed(
                         autoScrollRunnable, duration
                     )

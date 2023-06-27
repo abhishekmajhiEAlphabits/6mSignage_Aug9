@@ -15,6 +15,7 @@ import com.digitalsln.project6mSignage.model.FileDescriptors
 import com.digitalsln.project6mSignage.model.PlaylistData
 import com.digitalsln.project6mSignage.tvLauncher.utilities.AppPreference
 import com.digitalsln.project6mSignage.tvLauncher.utilities.Constants
+import com.digitalsln.project6mSignage.tvLauncher.utilities.Utils
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -25,7 +26,7 @@ import kotlin.collections.ArrayList
 
 @Singleton
 class PlaylistManager(context: Context) {
-    private var TAG = "abhi"
+    private var TAG = "TvTimer"
     val context = context
     private var mediaSourceUrls = ArrayList<PlaylistData>()
     private var playlistSize: Int? = null
@@ -60,7 +61,7 @@ class PlaylistManager(context: Context) {
                                 if (response.body()!!.size != null) {
                                     AppPreference(context).saveKeyValue(
                                         response.body()!!.size.toString(),
-                                        "$nativeScreenCode-PLAYLIST_SIZE"
+                                        "$nativeScreenCode-${Constants.playlistSize}"
                                     )
                                     mediaSourceUrls.clear()
                                     for (data in response.body()!!) {
@@ -93,51 +94,51 @@ class PlaylistManager(context: Context) {
 
                                             AppPreference(context).saveKeyValue(
                                                 id.toString(),
-                                                "$nativeScreenCode-$i-ID"
+                                                "$nativeScreenCode-$i-${Constants.id}"
                                             )
                                             AppPreference(context).saveKeyValue(
                                                 contentType.toString(),
-                                                "$nativeScreenCode-$i-CONTENT_TYPE"
+                                                "$nativeScreenCode-$i-${Constants.contentType}"
                                             )
                                             AppPreference(context).saveKeyValue(
                                                 slideContentUrl,
-                                                "$nativeScreenCode-$i-CONTENT_URL"
+                                                "$nativeScreenCode-$i-${Constants.slideContentUrl}"
                                             )
                                             AppPreference(context).saveKeyValue(
                                                 autoReplayVideo.toString(),
-                                                "$nativeScreenCode-$i-AUTO_REPLAY"
+                                                "$nativeScreenCode-$i-${Constants.autoReplayVideo}"
                                             )
                                             AppPreference(context).saveKeyValue(
                                                 interval.toString(),
-                                                "$nativeScreenCode-$i-INTERVAL"
+                                                "$nativeScreenCode-$i-${Constants.interval}"
                                             )
                                             if (fromDate != null) {
                                                 AppPreference(context).saveKeyValue(
                                                     fromDate,
-                                                    "$nativeScreenCode-$i-FROM_DATE"
+                                                    "$nativeScreenCode-$i-${Constants.fromDate}"
                                                 )
                                             }
                                             if (toDate != null) {
                                                 AppPreference(context).saveKeyValue(
                                                     toDate,
-                                                    "$nativeScreenCode-$i-TO_DATE"
+                                                    "$nativeScreenCode-$i-${Constants.toDate}"
                                                 )
                                             }
                                             if (fromTime != null) {
                                                 AppPreference(context).saveKeyValue(
                                                     fromTime,
-                                                    "$nativeScreenCode-$i-FROM_TIME"
+                                                    "$nativeScreenCode-$i-${Constants.fromTimeSlide}"
                                                 )
                                             }
                                             if (toTime != null) {
                                                 AppPreference(context).saveKeyValue(
                                                     toTime,
-                                                    "$nativeScreenCode-$i-TO_TIME"
+                                                    "$nativeScreenCode-$i-${Constants.toTimeSlide}"
                                                 )
                                             }
                                             AppPreference(context).saveKeyValue(
                                                 days.toString(),
-                                                "$$nativeScreenCode-$i-DAYS"
+                                                "$$nativeScreenCode-$i-${Constants.days}"
                                             )
 
                                         }
@@ -179,20 +180,26 @@ class PlaylistManager(context: Context) {
                     Constants.defaultNativeScreenCode
                 )
             val responseSize =
-                AppPreference(context).retrieveValueByKey("$nativeScreenCode-PLAYLIST_SIZE", "6")
+                AppPreference(context).retrieveValueByKey(
+                    "$nativeScreenCode-${Constants.playlistSize}",
+                    Constants.defaultPlaylistSize
+                )
             for (i in 0 until responseSize.toInt()) {
-                var id = AppPreference(context).retrieveValueByKey("$nativeScreenCode-$i-ID", "0")
+                var id = AppPreference(context).retrieveValueByKey(
+                    "$nativeScreenCode-$i-${Constants.id}",
+                    Constants.defaultId
+                )
                 var contentType =
                     AppPreference(context).retrieveValueByKey(
-                        "$nativeScreenCode-$i-CONTENT_TYPE",
-                        "2"
+                        "$nativeScreenCode-$i-${Constants.contentType}",
+                        Constants.defaultContentType
                     )
                 var slideContentUrl =
                     AppPreference(context).retrieveValueByKey(
-                        "$nativeScreenCode-$i-CONTENT_URL",
-                        "NA"
+                        "$nativeScreenCode-$i-${Constants.slideContentUrl}",
+                        Constants.defaultSlideContentUrl
                     )
-                if (slideContentUrl != "NA") {
+                if (slideContentUrl != Constants.defaultSlideContentUrl) {
                     val uri: Uri = Uri.parse(slideContentUrl)
                     val filename = slideContentUrl.substring(slideContentUrl.length - 5)
                     Log.d(TAG, "file uri :: $uri :: $filename :: $filename")
@@ -224,8 +231,6 @@ class PlaylistManager(context: Context) {
                 Environment.DIRECTORY_DOWNLOADS,
                 "$filename"
             )
-            Log.d(TAG, "files image/video fileDir :: $fileId")
-
 
             val reference = downloadManager.enqueue(request)
             val query = DownloadManager.Query()
@@ -269,28 +274,33 @@ class PlaylistManager(context: Context) {
                 )
             fileDescriptors.clear()
             val responseSize =
-                AppPreference(context).retrieveValueByKey("$nativeScreenCode-PLAYLIST_SIZE", "6")
+                AppPreference(context).retrieveValueByKey(
+                    "$nativeScreenCode-${Constants.playlistSize}",
+                    Constants.defaultPlaylistSize
+                )
             for (i in 0 until responseSize.toInt()) {
-                var id = AppPreference(context).retrieveValueByKey("$nativeScreenCode-$i-ID", "0")
+                var id = AppPreference(context).retrieveValueByKey(
+                    "$nativeScreenCode-$i-${Constants.id}",
+                    Constants.defaultId
+                )
                 var contentType =
                     AppPreference(context).retrieveValueByKey(
-                        "$nativeScreenCode-$i-CONTENT_TYPE",
-                        "2"
+                        "$nativeScreenCode-$i-${Constants.contentType}",
+                        Constants.defaultContentType
                     )
                 var slideContentUrl =
                     AppPreference(context).retrieveValueByKey(
-                        "$nativeScreenCode-$i-CONTENT_URL",
-                        "NA"
+                        "$nativeScreenCode-$i-${Constants.slideContentUrl}",
+                        Constants.defaultSlideContentUrl
                     )
-                if (slideContentUrl != "NA") {
+                if (slideContentUrl != Constants.defaultSlideContentUrl) {
                     var interval =
                         AppPreference(context).retrieveValueByKey(
-                            "$nativeScreenCode-$i-INTERVAL",
+                            "$nativeScreenCode-$i-${Constants.interval}",
                             "NA"
                         )
                     val filename = slideContentUrl.substring(slideContentUrl.length - 5)
                     readFromStorage(id.toInt(), contentType.toInt(), interval.toInt(), filename)
-                    Log.d("abhi", "readData")
                 }
             }
         } catch (e: Exception) {
@@ -307,7 +317,35 @@ class PlaylistManager(context: Context) {
     fun deleteNDownloadData() {
         var isScreenRegistered = AppPreference(context).isScreenRegistered()
         var isPlaylistBound = AppPreference(context).isPlaylistBound()
-        if (isScreenRegistered && isPlaylistBound) {
+        val isNetworkAvailable = Utils.isNetworkAvailable(context)
+        if (isScreenRegistered && isPlaylistBound && isNetworkAvailable) {
+            var nativeScreenCode =
+                AppPreference(context).retrieveValueByKey(
+                    Constants.nativeScreenCode,
+                    Constants.defaultNativeScreenCode
+                )
+            val responseSize =
+                AppPreference(context).retrieveValueByKey(
+                    "$nativeScreenCode-${Constants.playlistSize}",
+                    Constants.defaultPlaylistSize
+                )
+            for (i in 0 until responseSize.toInt()) {
+                var slideContentUrl =
+                    AppPreference(context).retrieveValueByKey(
+                        "$nativeScreenCode-$i-${Constants.slideContentUrl}",
+                        Constants.defaultSlideContentUrl
+                    )
+                if (slideContentUrl != Constants.defaultSlideContentUrl) {
+                    val filename = slideContentUrl.substring(slideContentUrl.length - 5)
+                    var filePath =
+                        "${context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)}/$filename"
+                    var file = File(filePath)
+                    if (file.exists()) {
+                        file.delete()
+                        Log.d(TAG, "deleting..$filename")
+                    }
+                }
+            }
             getPlayListData()
         }
     }

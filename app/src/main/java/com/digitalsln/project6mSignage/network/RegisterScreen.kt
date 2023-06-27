@@ -21,7 +21,7 @@ import javax.inject.Singleton
 class RegisterScreen(context: Context) {
     private val context = context
     private val TAG = "TvTimer"
-    private val autoApiCallHandler = Handler()
+    private val autoApiCallHandler = Handler(Looper.getMainLooper())
 
     fun registerScreen() {
         try {
@@ -53,70 +53,87 @@ class RegisterScreen(context: Context) {
                 })
 
         } catch (e: Exception) {
-
+            Log.d("abhi", "$e")
         }
     }
 
     private fun bindPlaylistForScreen() {
-        var nativeScreenCode =
-            AppPreference(context).retrieveValueByKey(
-                Constants.nativeScreenCode,
-                Constants.defaultNativeScreenCode
-            )
-        ApiClient.client().create(ApiInterface::class.java)
-            .getPlayList(nativeScreenCode).enqueue(object : Callback<List<PlaylistData>> {
-                override fun onResponse(
-                    call: Call<List<PlaylistData>>,
-                    response: Response<List<PlaylistData>>
-                ) {
-                    if (response.isSuccessful) {
+        try {
+            var nativeScreenCode =
+                AppPreference(context).retrieveValueByKey(
+                    Constants.nativeScreenCode,
+                    Constants.defaultNativeScreenCode
+                )
+            ApiClient.client().create(ApiInterface::class.java)
+                .getPlayList(nativeScreenCode).enqueue(object : Callback<List<PlaylistData>> {
+                    override fun onResponse(
+                        call: Call<List<PlaylistData>>,
+                        response: Response<List<PlaylistData>>
+                    ) {
+                        if (response.isSuccessful) {
 
-                        if (response.body() != null) {
-                            Log.d(TAG, "${response.body()}")
+                            if (response.body() != null && response.code() == 200) {
+                                Log.d(TAG, "${response.body()}")
 
-                            if (response.body()!!.size != null) {
-                                AppPreference(context).setPlaylistBound(true)
+                                if (response.body()!!.size != null) {
+                                    AppPreference(context).setPlaylistBound(true)
+                                    showActivity()
+                                }
+                            } else {
                                 showActivity()
+                                apiCronJob()
                             }
                         }
                     }
-                }
 
-                override fun onFailure(call: Call<List<PlaylistData>>, t: Throwable) {
-                    Toast.makeText(
-                        context,
-                        "Failed to bind playlist! Please try again",
-                        Toast.LENGTH_LONG
-                    )
-                        .show()
-                    apiCronJob()
-                    Log.d(TAG, "$t")
-                }
-            })
+                    override fun onFailure(call: Call<List<PlaylistData>>, t: Throwable) {
+                        Toast.makeText(
+                            context,
+                            "Failed to bind playlist! Please try again",
+                            Toast.LENGTH_LONG
+                        )
+                            .show()
+                        showActivity()
+                        apiCronJob()
+                        Log.d(TAG, "$t")
+                    }
+                })
+        } catch (e: Exception) {
+            Log.d("abhi", "$e")
+        }
+
     }
 
     private fun showActivity() {
-        var isScreenRegistered = AppPreference(context).isScreenRegistered()
-        var isPlaylistBound = AppPreference(context).isPlaylistBound()
-        var nativeScreenCode = AppPreference(context).retrieveValueByKey(
-            Constants.nativeScreenCode,
-            Constants.defaultNativeScreenCode
-        )
-        if (isScreenRegistered && isPlaylistBound) {
-            var intent = Intent(context, SlideShowActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(intent)
-        } else {
-            var intent = Intent(context, PlaylistNotBoundActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(intent)
+        try {
+            var isScreenRegistered = AppPreference(context).isScreenRegistered()
+            var isPlaylistBound = AppPreference(context).isPlaylistBound()
+            var nativeScreenCode = AppPreference(context).retrieveValueByKey(
+                Constants.nativeScreenCode,
+                Constants.defaultNativeScreenCode
+            )
+            if (isScreenRegistered && isPlaylistBound) {
+                var intent = Intent(context, SlideShowActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+                Log.d("abhi", "inside slide")
+            } else {
+                var intent = Intent(context, PlaylistNotBoundActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+                Log.d("abhi", "inside not bound")
+            }
+        } catch (e: Exception) {
+            Log.d("abhi", "$e")
         }
+
     }
 
     private fun apiCronJob() {
         autoApiCallHandler.postDelayed(Runnable {
             bindPlaylistForScreen()
-        }, 10000)
+            Log.d("abhi", "inside cron job")
+        }, 10000L)
     }
 
 }
