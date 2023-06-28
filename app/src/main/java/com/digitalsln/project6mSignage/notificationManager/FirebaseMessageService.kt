@@ -24,7 +24,7 @@ class FirebaseMessageService : FirebaseMessagingService() {
     private var playlistManager = PlaylistManager(this)
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
-        Log.d("ravi", "msg received: ${remoteMessage.notification?.title}")
+        Log.d("tokens", "msg received: ${remoteMessage.notification?.title}")
         if (remoteMessage.notification != null) {
             playlistManager.deleteNDownloadData()
             sendNotification(remoteMessage)

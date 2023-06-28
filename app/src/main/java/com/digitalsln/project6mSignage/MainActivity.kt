@@ -217,10 +217,10 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         FirebaseMessaging.getInstance().token
             .addOnCompleteListener { task ->
                     if (!task.isSuccessful) {
-                        Log.d("ravi", "Task Failed")
+                        Log.d("tokens", "Task Failed")
                         return@addOnCompleteListener
                     }
-                    Log.d("ravi", "The result: " + task.result)
+                    Log.d(TAG2, "The result: " + task.result)
 
             }
     }
