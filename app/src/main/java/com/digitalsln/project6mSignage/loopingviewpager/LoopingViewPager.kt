@@ -75,7 +75,7 @@ class LoopingViewPager : ViewPager {
             Constants.nativeScreenCode,
             Constants.defaultNativeScreenCode
         )
-        val responseSize = AppPreference(context).retrieveValueByKey("PLAYLIST_SIZE", "6")
+        val responseSize = AppPreference(context).retrieveValueByKey(Constants.playlistSize, Constants.defaultPlaylistSize)
         if (responseSize.toInt() != null && responseSize.toInt() != 0) {
             for (i in 0 until responseSize.toInt()) {
                 slideDurations[i] =

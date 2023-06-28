@@ -8,10 +8,13 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.WindowManager
+import android.view.animation.Interpolator
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
+import androidx.viewpager.widget.ViewPager
 import com.digitalsln.project6mSignage.adapters.DemoInfiniteAdapter
+import com.digitalsln.project6mSignage.loopingviewpager.FixedSpeedScroller
 import com.digitalsln.project6mSignage.loopingviewpager.LoopingViewPager
 import com.digitalsln.project6mSignage.model.FileDescriptors
 import com.digitalsln.project6mSignage.network.PlaylistManager
@@ -51,6 +54,21 @@ class SlideShowActivity : AppCompatActivity() {
 
             fileDescriptors.add(FileDescriptors(100, 2, "", false, 10))
             fileDescriptors.add(FileDescriptors(100, 2, "", false, 10))
+
+            try {
+                val mScroller = ViewPager::class.java.getDeclaredField("mScroller")
+                mScroller.isAccessible = true
+                val interpolator = ViewPager::class.java.getDeclaredField("sInterpolator")
+                interpolator.isAccessible = true
+                val scroller = FixedSpeedScroller(
+                    viewPager.context,
+                    interpolator[null] as Interpolator
+                )
+                mScroller.set(viewPager, scroller)
+            } catch (e: NoSuchFieldException) {
+            } catch (e: IllegalArgumentException) {
+            } catch (e: IllegalAccessException) {
+            }
 
             adapter = DemoInfiniteAdapter(fileDescriptors, true)
             viewPager.adapter = adapter
