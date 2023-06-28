@@ -51,14 +51,12 @@ class DemoInfiniteAdapter(
                 videoView.setOnPreparedListener {
                     it.start()
                     it.isLooping = true
-//                    videoView!!.start()
                 }
             } else {
 //                videoView.stopPlayback()
                 videoView.visibility = View.GONE
                 imageView.visibility = View.VISIBLE
                 imageView.setImageResource(R.drawable.loading)
-//                loading.visibility = View.VISIBLE
             }
         } else if (viewType == 2) {
             videoView = convertView.findViewById<View>(R.id.video) as VideoView

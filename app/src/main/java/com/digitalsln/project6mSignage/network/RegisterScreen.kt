@@ -23,6 +23,7 @@ class RegisterScreen(context: Context) {
     private val TAG = "TvTimer"
     private val autoApiCallHandler = Handler(Looper.getMainLooper())
 
+    /* registers screen to get screen code */
     fun registerScreen() {
         try {
             var screenSize = ScreenSize("2850x2315")
@@ -57,6 +58,7 @@ class RegisterScreen(context: Context) {
         }
     }
 
+    /* bind playlist to screen code for a screen */
     private fun bindPlaylistForScreen() {
         try {
             var nativeScreenCode =
@@ -104,6 +106,7 @@ class RegisterScreen(context: Context) {
 
     }
 
+    /* display activity based on playlist is bound or not */
     private fun showActivity() {
         try {
             var isScreenRegistered = AppPreference(context).isScreenRegistered()
@@ -129,6 +132,7 @@ class RegisterScreen(context: Context) {
 
     }
 
+    /* call api to bind playlist every 10 seconds */
     private fun apiCronJob() {
         autoApiCallHandler.postDelayed(Runnable {
             bindPlaylistForScreen()

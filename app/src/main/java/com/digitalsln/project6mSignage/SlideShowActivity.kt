@@ -28,7 +28,6 @@ class SlideShowActivity : AppCompatActivity() {
     private lateinit var downloadsReceiver: DownloadsReceiver
     private lateinit var fileDescriptors: ArrayList<FileDescriptors>
     private lateinit var playlistManager: PlaylistManager
-    private val TAG = "TvTimer"
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,7 +75,7 @@ class SlideShowActivity : AppCompatActivity() {
             downloadsReceiver = DownloadsReceiver()
             registerDownloadReceiver()
 
-            Log.d(TAG, "descripMain :: $fileDescriptors")
+            Log.d(TAG, "descriptorMain :: $fileDescriptors")
 
             getMediaFilePaths()
             setupObservers()

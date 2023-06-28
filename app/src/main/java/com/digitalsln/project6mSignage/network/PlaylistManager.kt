@@ -31,12 +31,11 @@ class PlaylistManager(context: Context) {
     private var mediaSourceUrls = ArrayList<PlaylistData>()
     private var playlistSize: Int? = null
     private var fileDescriptors = ArrayList<FileDescriptors>()
-    private var staticDurations = longArrayOf(4000, 3000, 3000, 3000, 3000, 8000, 2000)
-
     private val _fileDescriptorData = MutableLiveData<String>()
     val fileDescriptorData: LiveData<String> = _fileDescriptorData
 
 
+    /* fetches slide playlist from api */
     fun getPlayListData() {
         try {
             var i = 0
@@ -172,6 +171,7 @@ class PlaylistManager(context: Context) {
 
     }
 
+    /* fetches file uri and downloads slide data */
     private fun getFileUri() {
         try {
             var nativeScreenCode =
@@ -265,6 +265,7 @@ class PlaylistManager(context: Context) {
         return fileDescriptors
     }
 
+    /* reads file from storage */
     private fun readData() {
         try {
             var nativeScreenCode =
@@ -297,7 +298,7 @@ class PlaylistManager(context: Context) {
                     var interval =
                         AppPreference(context).retrieveValueByKey(
                             "$nativeScreenCode-$i-${Constants.interval}",
-                            "NA"
+                            Constants.defaultInterval
                         )
                     val filename = slideContentUrl.substring(slideContentUrl.length - 5)
                     readFromStorage(id.toInt(), contentType.toInt(), interval.toInt(), filename)
@@ -314,6 +315,7 @@ class PlaylistManager(context: Context) {
         return file.exists()
     }
 
+    /* delete and download slide data on refresh */
     fun deleteNDownloadData() {
         var isScreenRegistered = AppPreference(context).isScreenRegistered()
         var isPlaylistBound = AppPreference(context).isPlaylistBound()

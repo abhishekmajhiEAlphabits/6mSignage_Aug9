@@ -208,6 +208,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
     }
 
+    /* initialize firebase */
     private fun initFirebase() {
         FirebaseMessaging.getInstance().isAutoInitEnabled = true
 
@@ -750,7 +751,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 // text for our status text view.
                 AppPreference(this@MainActivity).saveKeyValue(
                     checkedId.toString(),
-                    "PLAY_SETTINGS_MODE"
+                    Constants.playlistSettingsMode
                 )
                 radioButton.requestFocus()
                 radioButton.requestFocusFromTouch()
@@ -769,8 +770,8 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 btnWeb.isVisible = true
                 btnNative.isVisible = true
                 var savedPlaySetting = AppPreference(this@MainActivity).retrieveValueByKey(
-                    "PLAY_SETTINGS_MODE",
-                    "-1"
+                    Constants.playlistSettingsMode,
+                    Constants.defaultPlaylistSettingsMode
                 ).toInt()
                 if (isFirstRunSetting) {
                     radioGroup.check(R.id.btnWeb)

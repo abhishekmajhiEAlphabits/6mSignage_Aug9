@@ -50,4 +50,7 @@ object Constants {
 
     const val playlistSize = "PLAYLIST_SIZE"
     const val defaultPlaylistSize = "6"
+
+    const val playlistSettingsMode = "PLAY_SETTINGS_MODE"
+    const val defaultPlaylistSettingsMode = "-1"
 }
