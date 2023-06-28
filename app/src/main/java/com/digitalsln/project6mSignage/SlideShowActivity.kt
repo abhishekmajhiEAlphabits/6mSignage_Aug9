@@ -86,12 +86,12 @@ class SlideShowActivity : AppCompatActivity() {
 
     private fun setupObservers() {
         downloadsReceiver.downloadState.observe(this, Observer {
-            Log.d(TAG, "inside observer")
+//            Log.d(TAG, "inside observer")
             getMediaFilePaths()
             adapter!!.setFileDescriptors(fileDescriptors)
         })
         playlistManager.fileDescriptorData.observe(this, Observer {
-            Log.d(TAG, "inside file observer")
+//            Log.d(TAG, "inside file observer")
             getMediaFilePaths()
             adapter!!.setFileDescriptors(fileDescriptors)
         })

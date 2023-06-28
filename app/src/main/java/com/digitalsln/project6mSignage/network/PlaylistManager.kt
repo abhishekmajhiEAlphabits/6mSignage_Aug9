@@ -252,7 +252,7 @@ class PlaylistManager(context: Context) {
             } else {
                 fileDescriptors.add(FileDescriptors(fileId, contentType, filePath, false, interval))
             }
-            Log.d(TAG, "read image/video :: $filePath :: ${file.exists()}")
+//            Log.d(TAG, "read image/video :: $filePath :: ${file.exists()}")
 
             _fileDescriptorData.postValue("file descriptor data updated")
         } catch (e: Exception) {
