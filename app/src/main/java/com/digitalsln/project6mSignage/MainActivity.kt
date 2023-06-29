@@ -32,7 +32,6 @@ import com.digitalsln.project6mSignage.appUtils.TimerHelpers
 import com.digitalsln.project6mSignage.databinding.ActivityMainBinding
 import com.digitalsln.project6mSignage.databinding.HandMadeStartAppDialogBinding
 import com.digitalsln.project6mSignage.databinding.PlayModeDialogBinding
-import com.digitalsln.project6mSignage.databinding.PlaySettingsDialogBinding
 import com.digitalsln.project6mSignage.model.TimeData
 import com.digitalsln.project6mSignage.network.ApiClient
 import com.digitalsln.project6mSignage.network.ApiInterface
@@ -216,11 +215,11 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
         FirebaseMessaging.getInstance().token
             .addOnCompleteListener { task ->
-                    if (!task.isSuccessful) {
-                        Log.d("tokens", "Task Failed")
-                        return@addOnCompleteListener
-                    }
-                    Log.d(TAG2, "The result: " + task.result)
+                if (!task.isSuccessful) {
+                    Log.d("tokens", "Task Failed")
+                    return@addOnCompleteListener
+                }
+                Log.d(TAG2, "The result: " + task.result)
 
             }
     }
@@ -349,7 +348,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     private fun scheduleApiCallTimer() {
         val am = getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val i = Intent(applicationContext, ApiCallSchedulerInitReceiver::class.java)
-        val pi = PendingIntent.getBroadcast(applicationContext, 0, i, 0)
+        val pi = PendingIntent.getBroadcast(applicationContext, 0, i, PendingIntent.FLAG_MUTABLE)
         val futureDate: Calendar = Calendar.getInstance()
         futureDate.set(Calendar.HOUR_OF_DAY, 23)
         futureDate.set(Calendar.MINUTE, 59)
@@ -647,7 +646,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             alarmManagers[i] = getSystemService(ALARM_SERVICE) as AlarmManager
             val pendingIntent = PendingIntent.getBroadcast(
                 applicationContext, 0,
-                intents[i]!!, PendingIntent.FLAG_CANCEL_CURRENT
+                intents[i]!!, PendingIntent.FLAG_MUTABLE
             )
             alarmManagers[i]!!.cancel(pendingIntent)
             Log.d(TAG2, "cancelled")
@@ -701,89 +700,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             Log.d(TAG2, "$e")
         }
 
-    }
-
-    private fun showPlaySettingsDialog() {
-        val dialogBinding = PlaySettingsDialogBinding.inflate(layoutInflater)
-
-        playSettingsDialog = Dialog(this).apply {
-            setContentView(dialogBinding.root)
-            window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-            setOnCancelListener {
-            }
-        }
-
-        dialogBinding.run {
-            btnWeb.setOnClickListener {
-                binding.webView.isEnabled = true
-                binding.webView.isVisible = true
-                playSettingsDialog!!.dismiss()
-                AppPreference(this@MainActivity).saveKeyValue(LAST_WEB_URL, REAL_URL)
-                binding.webView.loadUrl(REAL_URL)
-                dialog.dismiss()
-            }
-
-            btnNative.setOnClickListener {
-                binding.webView.stopLoading()
-                binding.webView.isEnabled = false
-                binding.webView.isVisible = false
-                playSettingsDialog!!.dismiss()
-                var isScreenRegistered = AppPreference(this@MainActivity).isScreenRegistered()
-                var isPlaylistBound = AppPreference(this@MainActivity).isPlaylistBound()
-                var nativeScreenCode = AppPreference(this@MainActivity).retrieveValueByKey(
-                    Constants.nativeScreenCode,
-                    Constants.defaultNativeScreenCode
-                )
-                if (isScreenRegistered && isPlaylistBound) {
-                    startActivity(Intent(applicationContext, SlideShowActivity::class.java))
-                } else {
-                    registerScreen.registerScreen()
-                }
-//                dialog.dismiss()
-            }
-
-            radioGroup.setOnCheckedChangeListener { group, checkedId ->
-                // Get the selected Radio Button
-                val radioButton = group
-                    .findViewById(checkedId) as RadioButton
-
-                // on below line we are setting
-                // text for our status text view.
-                AppPreference(this@MainActivity).saveKeyValue(
-                    checkedId.toString(),
-                    Constants.playlistSettingsMode
-                )
-                radioButton.requestFocus()
-                radioButton.requestFocusFromTouch()
-//                Toast.makeText(applicationContext, "${checkedId}", Toast.LENGTH_LONG)
-//                    .show()
-                Log.d(TAG2, "${radioButton.text}")
-            }
-        }
-        playSettingsDialog?.show()
-    }
-
-    private fun showPlaySettingsButtons() {
-        val isFirstRunSetting = AppPreference(this@MainActivity).isFirstTimeRunSettings()
-        playSettingsDialog?.findViewById<ViewGroup>(R.id.rootLayouts)?.let {
-            PlaySettingsDialogBinding.bind(it).run {
-                btnWeb.isVisible = true
-                btnNative.isVisible = true
-                var savedPlaySetting = AppPreference(this@MainActivity).retrieveValueByKey(
-                    Constants.playlistSettingsMode,
-                    Constants.defaultPlaylistSettingsMode
-                ).toInt()
-                if (isFirstRunSetting) {
-                    radioGroup.check(R.id.btnWeb)
-                    AppPreference(this@MainActivity).setFirstTimeRunSettings(false)
-                }
-                if (savedPlaySetting != null && savedPlaySetting != -1) {
-                    radioGroup.check(savedPlaySetting)
-                }
-
-            }
-        }
-        Log.d(TAG, "codes is shown")
     }
 
     private fun startConnecting() {
@@ -935,9 +851,9 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             }
 
             btPlay.setOnClickListener {
+                AppPreference(this@MainActivity).saveKeyValue(LAST_WEB_URL, REAL_URL)
+                previewPlayMode()
                 startScheduler()
-                showPlaySettingsDialog()
-                showPlaySettingsButtons()
             }
 
             btPlayMode.setOnClickListener {
@@ -1029,6 +945,35 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         }
     }
 
+    private fun previewPlayMode() {
+        var savedPlaySetting = AppPreference(this@MainActivity).retrieveValueByKey(
+            Constants.playlistSettingsMode,
+            Constants.defaultPlaylistSettingsMode
+        ).toInt()
+        if (savedPlaySetting == R.id.btnWeb) {
+            binding.webView.isEnabled = true
+            binding.webView.isVisible = true
+            binding.webView.loadUrl(REAL_URL)
+            dialog.dismiss()
+        } else {
+            binding.webView.stopLoading()
+            binding.webView.isEnabled = false
+            binding.webView.isVisible = false
+            var isScreenRegistered = AppPreference(this@MainActivity).isScreenRegistered()
+            var isPlaylistBound = AppPreference(this@MainActivity).isPlaylistBound()
+            var nativeScreenCode = AppPreference(this@MainActivity).retrieveValueByKey(
+                Constants.nativeScreenCode,
+                Constants.defaultNativeScreenCode
+            )
+            if (isScreenRegistered && isPlaylistBound) {
+                startActivity(Intent(applicationContext, SlideShowActivity::class.java))
+            } else {
+                registerScreen.registerScreen()
+            }
+//                dialog.dismiss()
+        }
+    }
+
     private fun showPlayModeDialog() {
 
         val dialogBinding = PlayModeDialogBinding.inflate(layoutInflater)
@@ -1055,12 +1000,59 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 binding.webView.loadUrl(TEST_URL)
                 dialog.dismiss()
             }
+
+            btnWeb.setOnClickListener {
+//                binding.webView.isEnabled = true
+//                binding.webView.isVisible = true
+//                playModeDialog!!.dismiss()
+//                AppPreference(this@MainActivity).saveKeyValue(LAST_WEB_URL, REAL_URL)
+//                binding.webView.loadUrl(REAL_URL)
+//                dialog.dismiss()
+            }
+
+            btnNative.setOnClickListener {
+//                binding.webView.stopLoading()
+//                binding.webView.isEnabled = false
+//                binding.webView.isVisible = false
+////                playModeDialog!!.dismiss()
+//                var isScreenRegistered = AppPreference(this@MainActivity).isScreenRegistered()
+//                var isPlaylistBound = AppPreference(this@MainActivity).isPlaylistBound()
+//                var nativeScreenCode = AppPreference(this@MainActivity).retrieveValueByKey(
+//                    Constants.nativeScreenCode,
+//                    Constants.defaultNativeScreenCode
+//                )
+//                if (isScreenRegistered && isPlaylistBound) {
+//                    startActivity(Intent(applicationContext, SlideShowActivity::class.java))
+//                } else {
+//                    registerScreen.registerScreen()
+//                }
+////                dialog.dismiss()
+            }
+
+            radioGroup.setOnCheckedChangeListener { group, checkedId ->
+                // Get the selected Radio Button
+                val radioButton = group
+                    .findViewById(checkedId) as RadioButton
+
+                // on below line we are setting
+                // text for our status text view.
+                AppPreference(this@MainActivity).saveKeyValue(
+                    checkedId.toString(),
+                    Constants.playlistSettingsMode
+                )
+                radioButton.requestFocus()
+                radioButton.requestFocusFromTouch()
+//                Toast.makeText(applicationContext, "${checkedId}", Toast.LENGTH_LONG)
+//                    .show()
+                Log.d(TAG2, "${radioButton.text}")
+            }
         }
         playModeDialog?.show()
     }
 
     // hide loader and show buttons in play mode dialog
     private fun showPlayModeButtons() {
+        val isFirstRunSetting = AppPreference(this@MainActivity).isFirstTimeRunSettings()
         playModeDialog?.findViewById<ViewGroup>(R.id.rootLayout)?.let {
             PlayModeDialogBinding.bind(it).run {
                 loader.isVisible = false
@@ -1070,6 +1062,20 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 testButton.isVisible = true
                 testButton.isVisible = true
                 title.isVisible = true
+
+                btnWeb.isVisible = true
+                btnNative.isVisible = true
+                var savedPlaySetting = AppPreference(this@MainActivity).retrieveValueByKey(
+                    Constants.playlistSettingsMode,
+                    Constants.defaultPlaylistSettingsMode
+                ).toInt()
+                if (isFirstRunSetting) {
+                    radioGroup.check(R.id.btnWeb)
+                    AppPreference(this@MainActivity).setFirstTimeRunSettings(false)
+                }
+                if (savedPlaySetting != null && savedPlaySetting != -1) {
+                    radioGroup.check(savedPlaySetting)
+                }
             }
         }
         Log.d(TAG, "codes is shown")

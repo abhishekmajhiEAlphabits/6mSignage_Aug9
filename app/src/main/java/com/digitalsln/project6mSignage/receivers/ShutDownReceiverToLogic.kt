@@ -46,7 +46,7 @@ class ShutDownReceiverToLogic : BroadcastReceiver() {
 
             val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val i = Intent(context, TimeOutReceiver::class.java)
-            val pi = PendingIntent.getBroadcast(context, 0, i, 0)
+            val pi = PendingIntent.getBroadcast(context, 0, i, PendingIntent.FLAG_MUTABLE)
             val futureDate: Calendar = Calendar.getInstance()
             val toLogicTime =
                 timerHelpers.getApiToLogicTimePreferences(timerHelpers.getWeekDayInInt())

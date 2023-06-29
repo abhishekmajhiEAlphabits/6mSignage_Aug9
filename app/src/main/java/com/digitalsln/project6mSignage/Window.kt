@@ -115,7 +115,7 @@ class Window(context: Context) {
             if (timerHelpers.isTimeValidAndNotEmpty(toIdealTime)) {
                 val am = context!!.getSystemService(Context.ALARM_SERVICE) as AlarmManager
                 val i = Intent(context, ShutDownReceiverToIdeal::class.java)
-                val pi = PendingIntent.getBroadcast(context, 0, i, 0)
+                val pi = PendingIntent.getBroadcast(context, 0, i, PendingIntent.FLAG_MUTABLE)
                 val futureDate: Calendar = Calendar.getInstance()
                 val cal = Calendar.getInstance()
                 val sdf = SimpleDateFormat("HH:mm:ss")
@@ -168,7 +168,7 @@ class Window(context: Context) {
             if (timerHelpers.isTimeValidAndNotEmpty(toLogicTime)) {
                 val am = context!!.getSystemService(Context.ALARM_SERVICE) as AlarmManager
                 val i = Intent(context, ShutDownReceiverToLogic::class.java)
-                val pi = PendingIntent.getBroadcast(context, 0, i, 0)
+                val pi = PendingIntent.getBroadcast(context, 0, i, PendingIntent.FLAG_MUTABLE)
                 val futureDate: Calendar = Calendar.getInstance()
                 val cal = Calendar.getInstance()
                 val sdf = SimpleDateFormat("HH:mm:ss")
@@ -220,7 +220,7 @@ class Window(context: Context) {
             if (timerHelpers.isTimeValidAndNotEmpty(fromTime)) {
                 val am = context!!.getSystemService(Context.ALARM_SERVICE) as AlarmManager
                 val i = Intent(context, WakeUpReceiver::class.java)
-                val pi = PendingIntent.getBroadcast(context, 0, i, 0)
+                val pi = PendingIntent.getBroadcast(context, 0, i, PendingIntent.FLAG_MUTABLE)
                 val futureDate: Calendar = Calendar.getInstance()
                 val cal = Calendar.getInstance()
                 val sdf = SimpleDateFormat("HH:mm:ss")

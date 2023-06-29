@@ -25,8 +25,8 @@
 
     <!--    Non auto setting dialog-->
     <string name="reset_all_settings">Reset All settings</string>
-    <string name="play_mode">Play mode</string>
-    <string name="play">Play Settings</string>
+    <string name="play_mode">Play Settings</string>
+    <string name="play">Play</string>
     <!--    Non auto setting dialog-->
 
     <!--    Play mode dialog-->
