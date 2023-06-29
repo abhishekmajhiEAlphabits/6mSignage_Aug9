@@ -950,12 +950,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             Constants.playlistSettingsMode,
             Constants.defaultPlaylistSettingsMode
         ).toInt()
-        if (savedPlaySetting == R.id.btnWeb) {
-            binding.webView.isEnabled = true
-            binding.webView.isVisible = true
-            binding.webView.loadUrl(REAL_URL)
-            dialog.dismiss()
-        } else {
+        if (savedPlaySetting == R.id.btnNative) {
             binding.webView.stopLoading()
             binding.webView.isEnabled = false
             binding.webView.isVisible = false
@@ -971,6 +966,11 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 registerScreen.registerScreen()
             }
 //                dialog.dismiss()
+        } else {
+            binding.webView.isEnabled = true
+            binding.webView.isVisible = true
+            binding.webView.loadUrl(REAL_URL)
+            dialog.dismiss()
         }
     }
 
@@ -1002,31 +1002,9 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             }
 
             btnWeb.setOnClickListener {
-//                binding.webView.isEnabled = true
-//                binding.webView.isVisible = true
-//                playModeDialog!!.dismiss()
-//                AppPreference(this@MainActivity).saveKeyValue(LAST_WEB_URL, REAL_URL)
-//                binding.webView.loadUrl(REAL_URL)
-//                dialog.dismiss()
             }
 
             btnNative.setOnClickListener {
-//                binding.webView.stopLoading()
-//                binding.webView.isEnabled = false
-//                binding.webView.isVisible = false
-////                playModeDialog!!.dismiss()
-//                var isScreenRegistered = AppPreference(this@MainActivity).isScreenRegistered()
-//                var isPlaylistBound = AppPreference(this@MainActivity).isPlaylistBound()
-//                var nativeScreenCode = AppPreference(this@MainActivity).retrieveValueByKey(
-//                    Constants.nativeScreenCode,
-//                    Constants.defaultNativeScreenCode
-//                )
-//                if (isScreenRegistered && isPlaylistBound) {
-//                    startActivity(Intent(applicationContext, SlideShowActivity::class.java))
-//                } else {
-//                    registerScreen.registerScreen()
-//                }
-////                dialog.dismiss()
             }
 
             radioGroup.setOnCheckedChangeListener { group, checkedId ->
