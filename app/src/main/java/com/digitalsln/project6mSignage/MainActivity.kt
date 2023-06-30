@@ -57,7 +57,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     private lateinit var dialogBinding: HandMadeStartAppDialogBinding
     private var _binding: ActivityMainBinding? = null
     private var playModeDialog: Dialog? = null
-    private var playSettingsDialog: Dialog? = null
     private var hostIP: String? = null
     private var connection: DeviceConnection? = null
     private var service: Intent? = null
@@ -77,6 +76,13 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        appLogger = AppLogger()
+        registerScreen = RegisterScreen(applicationContext)
+        playlistManager = PlaylistManager(applicationContext)
+        timerHelpers = TimerHelpers(applicationContext)
+        networkChangeReceiver = NetworkChangeReceiver()
+        registerNetworkBroadcastForNougat()
 
         try {
             _binding = ActivityMainBinding.inflate(layoutInflater)
@@ -99,11 +105,20 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 .show()
         }
 
+        /* checks and request necessary permissions */
         try {
             checkOverlayPermission()
             checkWritePermission()
             getStoragePermission()
+        } catch (e: Exception) {
+            Toast.makeText(
+                this,
+                "Permissions not granted",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
 
+        try {
             /* Fetch and sets the default screen timeOut value in preferences */
             defaultValue =
                 Settings.System.getString(contentResolver, Settings.System.SCREEN_OFF_TIMEOUT)
@@ -118,12 +133,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             )
             wakeLock.acquire()
 
-            appLogger = AppLogger()
-            registerScreen = RegisterScreen(applicationContext)
-            playlistManager = PlaylistManager(applicationContext)
-            timerHelpers = TimerHelpers(applicationContext)
-            networkChangeReceiver = NetworkChangeReceiver()
-            registerNetworkBroadcastForNougat()
+            /* initializes firebase */
             initFirebase()
 
 
@@ -147,7 +157,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         } catch (e: Exception) {
             Toast.makeText(
                 this,
-                "Permissions not granted",
+                "Initialization failed!",
                 Toast.LENGTH_SHORT
             ).show()
             Log.d(TAG2, "error : $e")
@@ -1147,6 +1157,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 "Permissions not granted",
                 Toast.LENGTH_SHORT
             ).show()
+            Log.d(TAG2, "abhi : $e")
         }
     }
 
@@ -1179,6 +1190,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 "Permissions not granted",
                 Toast.LENGTH_SHORT
             ).show()
+            Log.d(TAG2, "abhi : $e")
         }
     }
 

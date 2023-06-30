@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.WindowManager
 import android.view.animation.Interpolator
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
@@ -35,14 +36,22 @@ class SlideShowActivity : AppCompatActivity() {
         setContentView(R.layout.activity_slide_show)
         window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         viewPager = findViewById(R.id.viewpager)
+        playlistManager = PlaylistManager(this)
 
         try {
             getStoragePermission()
+        } catch (e: Exception) {
+            Toast.makeText(
+                this,
+                "Storage permission not granted",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
 
+        try {
             //api call
             Thread(Runnable {
                 kotlin.run {
-                    playlistManager = PlaylistManager(this)
                     playlistManager.getPlayListData()
                 }
             }).start()
