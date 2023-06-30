@@ -274,9 +274,10 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         } catch (e: Exception) {
             Toast.makeText(
                 this,
-                "Lock failed",
+                "Lock failed :: $e",
                 Toast.LENGTH_SHORT
             ).show()
+            Log.d(TAG2, "lockTv() Failed :: $e")
         }
     }
 

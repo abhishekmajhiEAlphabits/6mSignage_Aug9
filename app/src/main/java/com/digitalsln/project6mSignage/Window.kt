@@ -103,7 +103,7 @@ class Window(context: Context) {
             // the above steps are necessary when you are adding and removing
             // the view simultaneously, it might give some exceptions
         } catch (e: Exception) {
-            Log.d("Error2", e.toString())
+//            Log.d("Error2", e.toString())
         }
     }
 

@@ -43,8 +43,9 @@ class DemoInfiniteAdapter(
         if (viewType == 3) {
             videoView = convertView.findViewById<View>(R.id.video) as VideoView
             imageView = convertView.findViewById<View>(R.id.image) as ImageView
-            Log.d("TvTimer", "listIf :: $listPosition :: ${itemList!![listPosition].slideFilePath}")
-            imageView.visibility = View.VISIBLE
+//            Log.d("TvTimer", "listIf :: $listPosition :: ${itemList!![listPosition].slideFilePath}")
+            Log.d("TvTimer", "Playing video :: FilePosition : $listPosition and FilePath : ${itemList!![listPosition].slideFilePath}")
+            imageView.visibility = View.GONE
             if (itemList!![listPosition].slideFilePath != null && itemList!![listPosition].isFileExist) {
                 videoView.visibility = View.VISIBLE
                 videoView.setVideoURI(Uri.parse(itemList!![listPosition].slideFilePath))
@@ -61,7 +62,8 @@ class DemoInfiniteAdapter(
         } else if (viewType == 2) {
             videoView = convertView.findViewById<View>(R.id.video) as VideoView
             imageView = convertView.findViewById<View>(R.id.image) as ImageView
-            Log.d("TvTimer", "listElseIf :: $listPosition")
+//            Log.d("TvTimer", "listElseIf :: $listPosition")
+            Log.d("TvTimer", "Playing image :: FilePosition : $listPosition and FilePath : ${itemList!![listPosition].slideFilePath}")
 //            videoView.stopPlayback()
             videoView.visibility = View.GONE
             imageView.visibility = View.VISIBLE
@@ -76,7 +78,8 @@ class DemoInfiniteAdapter(
         } else {
             videoView = convertView.findViewById<View>(R.id.video) as VideoView
             imageView = convertView.findViewById<View>(R.id.image) as ImageView
-            Log.d("TvTimer", "listElse :: $listPosition")
+//            Log.d("TvTimer", "listElse :: $listPosition")
+            Log.d("TvTimer", "Loading Screen :: FilePosition : $listPosition and FilePath : ${itemList!![listPosition].slideFilePath}")
 //            videoView!!.stopPlayback()
             videoView!!.visibility = View.GONE
             imageView!!.visibility = View.VISIBLE
