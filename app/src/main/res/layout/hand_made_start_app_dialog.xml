@@ -15,6 +15,20 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
+    <TextView
+        android:id="@+id/tv_web_screen_code"
+        style="@style/Theme_Title_TextView"
+        app:layout_constraintBottom_toTopOf="@+id/bt_play"
+        app:layout_constraintEnd_toStartOf="@+id/gl_v1"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_native_screen_code"
+        style="@style/Theme_Title_TextView"
+        app:layout_constraintBottom_toTopOf="@+id/bt_reset_settings"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@+id/gl_v2" />
+
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/gl_v1"
         android:layout_width="wrap_content"

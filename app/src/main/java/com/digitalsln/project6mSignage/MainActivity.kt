@@ -861,6 +861,25 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 tvIpAddress.text = "IP: $it"
             }
 
+            var nativeScreenCode = AppPreference(this@MainActivity).retrieveValueByKey(
+                Constants.nativeScreenCode,
+                Constants.defaultNativeScreenCode
+            )
+            if (nativeScreenCode != null && nativeScreenCode != Constants.defaultNativeScreenCode) {
+                tvNativeScreenCode.text = "Native Code: $nativeScreenCode"
+            }
+
+            var localScreenCode = AppPreference(this@MainActivity).retrieveLocalScreenCode(
+                Constants.localScreenCode,
+                Constants.defaultLocalScreenCode
+            )
+            if (localScreenCode != null && localScreenCode != Constants.defaultExternalScreenCode &&
+                localScreenCode != Constants.defaultLocalScreenCode
+            ) {
+                tvWebScreenCode.text = "Web Code: $localScreenCode"
+            }
+
+
             btPlay.setOnClickListener {
                 AppPreference(this@MainActivity).saveKeyValue(LAST_WEB_URL, REAL_URL)
                 previewPlayMode()
