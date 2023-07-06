@@ -4,13 +4,14 @@ import android.app.DownloadManager
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.view.WindowManager
 import android.view.animation.Interpolator
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.Observer
 import androidx.viewpager.widget.ViewPager
@@ -20,7 +21,7 @@ import com.digitalsln.project6mSignage.loopingviewpager.LoopingViewPager
 import com.digitalsln.project6mSignage.model.FileDescriptors
 import com.digitalsln.project6mSignage.network.PlaylistManager
 import com.digitalsln.project6mSignage.receivers.DownloadsReceiver
-import com.digitalsln.project6mSignage.tvLauncher.utilities.AppPreference
+
 
 class SlideShowActivity : AppCompatActivity() {
 
@@ -78,6 +79,9 @@ class SlideShowActivity : AppCompatActivity() {
             } catch (e: IllegalAccessException) {
             }
 
+            viewPager.setPageTransformer(true, FadePageTransformer())
+
+
             adapter = DemoInfiniteAdapter(fileDescriptors, true)
             viewPager.adapter = adapter
 
@@ -90,6 +94,23 @@ class SlideShowActivity : AppCompatActivity() {
             setupObservers()
         } catch (e: Exception) {
             Log.d(TAG, "error in onCreate :: $e")
+        }
+    }
+
+    class FadePageTransformer : ViewPager.PageTransformer {
+        override fun transformPage(view: View, position: Float) {
+            view.translationX = view.width * -position
+            if (position <= -1.0f || position >= 1.0f) {
+                view.alpha = 0.0f
+//                view.animate().alpha(0.0f)
+            } else if (position == 0.0f) {
+                view.alpha = 1.0f
+//                view.animate().alpha(1.0f)
+            } else {
+                // position is between -1.0F & 0.0F OR 0.0F & 1.0F
+                view.alpha = 1.0f - Math.abs(position)
+//                view.animate().alpha(1.0f - Math.abs(position))
+            }
         }
     }
 

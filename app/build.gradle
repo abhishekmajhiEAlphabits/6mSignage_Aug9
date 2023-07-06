@@ -56,4 +56,7 @@ dependencies {
     implementation "com.google.dagger:hilt-android:2.42"
     implementation 'com.google.android.material:material:1.4.0'
     implementation 'com.google.firebase:firebase-messaging:21.1.0'
+
+    // Exo Player Library
+    implementation "com.google.android.exoplayer:exoplayer:2.16.1"
 }

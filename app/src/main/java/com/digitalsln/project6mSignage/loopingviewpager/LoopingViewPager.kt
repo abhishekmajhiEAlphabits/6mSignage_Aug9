@@ -21,7 +21,9 @@ class LoopingViewPager : ViewPager {
     protected var isInfinite = true
     protected var isAutoScroll = false
     protected var wrapContent = true
-    private var staticDurations = longArrayOf(4000, 3000, 3000, 3000, 3000, 8000, 2000)
+
+    //    private var staticDurations = longArrayOf(2000, 2000, 2000, 2000, 2000, 2000, 2000,2000, 2000)
+    private var staticDurations = LongArray(10) { i -> ((1 + 1) * 1000).toLong() }
     var counter = 0
     private lateinit var playlistManager: PlaylistManager
     private lateinit var slideDurations: LongArray
@@ -75,7 +77,10 @@ class LoopingViewPager : ViewPager {
             Constants.nativeScreenCode,
             Constants.defaultNativeScreenCode
         )
-        val responseSize = AppPreference(context).retrieveValueByKey(Constants.playlistSize, Constants.defaultPlaylistSize)
+        val responseSize = AppPreference(context).retrieveValueByKey(
+            Constants.playlistSize,
+            Constants.defaultPlaylistSize
+        )
         if (responseSize.toInt() != null && responseSize.toInt() != 0) {
             for (i in 0 until responseSize.toInt()) {
                 slideDurations[i] =
@@ -131,9 +136,9 @@ class LoopingViewPager : ViewPager {
                         }
                         val index = currentItem
                         if (index == 0) {
-                            setCurrentItem(itemCount - 2, false) //Real last item
+                            setCurrentItem(itemCount - 2, true) //Real last item
                         } else if (index == itemCount - 1) {
-                            setCurrentItem(1, false) //Real first item
+                            setCurrentItem(1, true) //Real first item
                         }
                     }
                 }

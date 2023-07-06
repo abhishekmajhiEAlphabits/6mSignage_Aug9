@@ -148,6 +148,16 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                                 s,
                                 Constants.externalScreenCode
                             )
+                            var externalCode =
+                                AppPreference(this@MainActivity).retrieveExternalScreenCode(
+                                    Constants.externalScreenCode,
+                                    Constants.defaultExternalScreenCode
+                                )
+                            if (externalCode != null && externalCode != Constants.defaultExternalScreenCode
+                                && externalCode != "null"
+                            ) {
+                                dialogBinding.tvWebScreenCode.text = "Web Code: $externalCode"
+                            }
                         })
                     super.onConsoleMessage(message, lineNumber, sourceID)
                 }
@@ -874,7 +884,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 Constants.defaultLocalScreenCode
             )
             if (localScreenCode != null && localScreenCode != Constants.defaultExternalScreenCode &&
-                localScreenCode != Constants.defaultLocalScreenCode
+                localScreenCode != Constants.defaultLocalScreenCode && localScreenCode != "null"
             ) {
                 tvWebScreenCode.text = "Web Code: $localScreenCode"
             }
@@ -986,14 +996,17 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             binding.webView.isVisible = false
             var isScreenRegistered = AppPreference(this@MainActivity).isScreenRegistered()
             var isPlaylistBound = AppPreference(this@MainActivity).isPlaylistBound()
-            var nativeScreenCode = AppPreference(this@MainActivity).retrieveValueByKey(
-                Constants.nativeScreenCode,
-                Constants.defaultNativeScreenCode
-            )
             if (isScreenRegistered && isPlaylistBound) {
                 startActivity(Intent(applicationContext, SlideShowActivity::class.java))
             } else {
                 registerScreen.registerScreen()
+            }
+            var nativeScreenCode = AppPreference(this@MainActivity).retrieveValueByKey(
+                Constants.nativeScreenCode,
+                Constants.defaultNativeScreenCode
+            )
+            if (nativeScreenCode != null && nativeScreenCode != Constants.defaultNativeScreenCode) {
+                dialogBinding.tvNativeScreenCode.text = "Native Code: $nativeScreenCode"
             }
 //                dialog.dismiss()
         } else {
