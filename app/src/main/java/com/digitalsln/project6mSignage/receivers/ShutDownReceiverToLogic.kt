@@ -38,11 +38,21 @@ class ShutDownReceiverToLogic : BroadcastReceiver() {
                 MainActivity.wakeLock.release()
             }
 
-            Settings.System.putString(
-                context!!.contentResolver,
+            var isTimeOutSet = Settings.System.putString(
+                context!!.applicationContext.contentResolver,
                 Settings.System.SCREEN_OFF_TIMEOUT,
                 "0"
             )  //setting screen_timeout to 10sec
+
+            if (isTimeOutSet) {
+                var timeOutLog = "$logTime screen timeout set successfully"
+                appLogger.appendLog(timeOutLog)
+                Log.d(TAG, "$timeOutLog")
+            } else {
+                var timeOutLog = "$logTime Failed to set screen timeout."
+                appLogger.appendLog(timeOutLog)
+                Log.d(TAG, "$timeOutLog")
+            }
 
             val am = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
             val i = Intent(context, TimeOutReceiver::class.java)
@@ -64,7 +74,7 @@ class ShutDownReceiverToLogic : BroadcastReceiver() {
             futureDate.add(Calendar.SECOND, 20)
 //            am.setExact(AlarmManager.RTC_WAKEUP, futureDate.time.time, pi)
             val ac = AlarmManager.AlarmClockInfo(futureDate.time.time, pi)
-            am.setAlarmClock(ac,pi)
+            am.setAlarmClock(ac, pi)
 
         } catch (e: Exception) {
             val calendar = Calendar.getInstance()
