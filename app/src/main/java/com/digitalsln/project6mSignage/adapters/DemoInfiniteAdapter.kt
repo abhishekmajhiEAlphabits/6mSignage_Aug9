@@ -13,10 +13,6 @@ import android.widget.VideoView
 import com.digitalsln.project6mSignage.R
 import com.digitalsln.project6mSignage.loopingviewpager.LoopingPagerAdapter
 import com.digitalsln.project6mSignage.model.FileDescriptors
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.Player
-
 
 class DemoInfiniteAdapter(
     itemList: ArrayList<FileDescriptors>,
@@ -46,7 +42,6 @@ class DemoInfiniteAdapter(
         var videoView: VideoView? = null
         var imageView: ImageView? = null
         if (viewType == 3) {
-            convertView.findViewById<com.google.android.exoplayer2.ui.PlayerView>(R.id.exoplayer).visibility = View.VISIBLE
             videoView = convertView.findViewById<View>(R.id.video) as VideoView
             imageView = convertView.findViewById<View>(R.id.image) as ImageView
 //            Log.d("TvTimer", "listIf :: $listPosition :: ${itemList!![listPosition].slideFilePath}")
@@ -60,32 +55,20 @@ class DemoInfiniteAdapter(
                 videoView.setVideoURI(Uri.parse(itemList!![listPosition].slideFilePath))
                 val mediaController = MediaController(videoView.context)
                 mediaController.setAnchorView(videoView)
-//                var duration = itemList!![listPosition - 1].interval
+                var duration = itemList!![listPosition - 1].interval
 
-                var simpleExoPlayer = ExoPlayer.Builder(videoView!!.context).build()
-                var playerView = convertView.findViewById<com.google.android.exoplayer2.ui.PlayerView>(R.id.exoplayer)
-                playerView.player = simpleExoPlayer
-                val mediaItem: MediaItem =
-                    MediaItem.fromUri(Uri.parse(itemList!![listPosition].slideFilePath))
-                simpleExoPlayer.addMediaItem(mediaItem)
-                simpleExoPlayer.prepare()
-                simpleExoPlayer.setPlayWhenReady(false)
-                simpleExoPlayer.play()
-                simpleExoPlayer.setRepeatMode(Player.REPEAT_MODE_ONE)
+                videoView.setOnPreparedListener {
+                    Handler().postDelayed({
+                        videoView!!.start()
+                        videoView!!.setBackgroundColor(Color.TRANSPARENT)
+                    }, duration.toLong() * 1000)
+                }
+                videoView!!.setOnCompletionListener {
+                    videoView!!.start()
+                    videoView!!.setBackgroundColor(Color.TRANSPARENT)
+                }
 
-//                videoView.setOnPreparedListener {
-//                    Handler().postDelayed({
-//                        videoView!!.start()
-//                        videoView!!.setBackgroundColor(Color.TRANSPARENT)
-//                    }, duration.toLong() * 1000)
-////                    var duration = it.duration
-//                }
-//                videoView!!.setOnCompletionListener {
-//                    videoView!!.start()
-//                    videoView!!.setBackgroundColor(Color.TRANSPARENT)
-//                }
             } else {
-                convertView.findViewById<com.google.android.exoplayer2.ui.PlayerView>(R.id.exoplayer).visibility = View.GONE
                 videoView = convertView.findViewById<View>(R.id.video) as VideoView
                 imageView = convertView.findViewById<View>(R.id.image) as ImageView
 //                videoView.stopPlayback()
@@ -94,7 +77,6 @@ class DemoInfiniteAdapter(
                 imageView.setImageResource(R.drawable.loading)
             }
         } else if (viewType == 2) {
-            convertView.findViewById<com.google.android.exoplayer2.ui.PlayerView>(R.id.exoplayer).visibility = View.GONE
             videoView = convertView.findViewById<View>(R.id.video) as VideoView
             imageView = convertView.findViewById<View>(R.id.image) as ImageView
 //            Log.d("TvTimer", "listElseIf :: $listPosition")
