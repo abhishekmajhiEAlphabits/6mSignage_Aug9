@@ -231,7 +231,17 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     private fun initFirebase() {
         FirebaseMessaging.getInstance().isAutoInitEnabled = true
 
-        FirebaseMessaging.getInstance().subscribeToTopic("notification")
+        var nativeScreenCode =
+            AppPreference(this@MainActivity).retrieveValueByKey(
+                Constants.nativeScreenCode,
+                Constants.defaultNativeScreenCode
+            )
+        if (nativeScreenCode != null && nativeScreenCode != Constants.defaultNativeScreenCode
+            && nativeScreenCode != "null"
+        ) {
+            FirebaseMessaging.getInstance().subscribeToTopic("ScreenCode_$nativeScreenCode")
+        }
+
 
         FirebaseMessaging.getInstance().token
             .addOnCompleteListener { task ->
