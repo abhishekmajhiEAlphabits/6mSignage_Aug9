@@ -177,6 +177,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         binding.webView.isVisible = false
         binding.webView.visibility = View.GONE
         showHandMadeStartAppDialog()
+        previewPlayMode()
         syncTimer()
     }
 
