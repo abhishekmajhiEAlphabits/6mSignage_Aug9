@@ -190,7 +190,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
      */
     private fun syncTimer() {
         refreshButtonCall()
-        scheduleApiCallTimer()
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -669,13 +668,16 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
     /* cancels all previously scheduled alarms */
     private fun cancelMultipleAlarms() {
-        val size = 4
+        val size = 7
         val alarmManagers = arrayOfNulls<AlarmManager>(size)
         val intents = arrayOf<Intent>(
             Intent(applicationContext, ShutDownReceiverToIdeal::class.java),
             Intent(applicationContext, ShutDownReceiverToLogic::class.java),
             Intent(applicationContext, TimeOutReceiver::class.java),
-            Intent(applicationContext, WakeUpReceiver::class.java)
+            Intent(applicationContext, WakeUpReceiver::class.java),
+            Intent(applicationContext, ApiCallSchedulerInitReceiver::class.java),
+            Intent(applicationContext, ScheduleApiTimerReceiverOne::class.java),
+            Intent(applicationContext, ScheduleApiTimerReceiverTwo::class.java)
         )
         for (i in 0 until size) {
             alarmManagers[i] = getSystemService(ALARM_SERVICE) as AlarmManager
@@ -711,6 +713,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
             cancelMultipleAlarms() //cancels all alarms
             callApi()//recall api to get new times after refresh
+            scheduleApiCallTimer()
             if (!wakeLock.isHeld) {
                 wakeLock.acquire()
             }
