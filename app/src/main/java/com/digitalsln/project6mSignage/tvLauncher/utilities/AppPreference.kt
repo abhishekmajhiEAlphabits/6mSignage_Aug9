@@ -130,4 +130,14 @@ class AppPreference(context: Context) {
         if (sharedPreference == null) return
         sharedPreference!!.edit().putBoolean("FIRST_SETTINGS", flag).apply()
     }
+
+    fun isShutTimerSet(): Boolean {
+        if (sharedPreference == null) return false
+        return sharedPreference!!.getBoolean("SHUT_TIMER", false)
+    }
+
+    fun setShutTimerSet(flag: Boolean) {
+        if (sharedPreference == null) return
+        sharedPreference!!.edit().putBoolean("SHUT_TIMER", flag).apply()
+    }
 }

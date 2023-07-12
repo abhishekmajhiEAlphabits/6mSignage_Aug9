@@ -10,6 +10,7 @@ import android.util.Log
 import com.digitalsln.project6mSignage.MainActivity
 import com.digitalsln.project6mSignage.appUtils.AppLogger
 import com.digitalsln.project6mSignage.appUtils.TimerHelpers
+import com.digitalsln.project6mSignage.tvLauncher.utilities.AppPreference
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -47,6 +48,8 @@ class ShutDownReceiverToIdeal : BroadcastReceiver() {
                 Settings.System.SCREEN_OFF_TIMEOUT,
                 "0"
             )  //setting screen_timeout to 10sec
+
+            AppPreference(context).setShutTimerSet(true)
 
             if (isTimeOutSet) {
                 var timeOutLog = "$logTime screen timeout set successfully"

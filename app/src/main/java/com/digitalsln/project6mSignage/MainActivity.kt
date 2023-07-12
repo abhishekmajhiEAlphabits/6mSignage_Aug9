@@ -120,8 +120,11 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
         try {
             /* Fetch and sets the default screen timeOut value in preferences */
-            defaultValue =
-                Settings.System.getString(contentResolver, Settings.System.SCREEN_OFF_TIMEOUT)
+            var isShutTimerSet = AppPreference(this@MainActivity).isShutTimerSet()
+            if (!isShutTimerSet) {
+                defaultValue =
+                    Settings.System.getString(contentResolver, Settings.System.SCREEN_OFF_TIMEOUT)
+            }
             AppPreference(this@MainActivity).saveDefaultTimeOut(defaultValue!!, Constants.timeOut)
 
             /* creates wakelock and acquires it to keep screen on */
@@ -177,7 +180,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
         binding.webView.isVisible = false
         binding.webView.visibility = View.GONE
         showHandMadeStartAppDialog()
-        previewPlayMode()
+//        previewPlayMode()
         syncTimer()
     }
 
@@ -402,13 +405,13 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             var log = "$logTime Calling backend API to get timings"
             Log.d(TAG2, "$log")
             appLogger.appendLog(log)
-            var localScreenCode = AppPreference(this@MainActivity).retrieveLocalScreenCode(
-                Constants.localScreenCode,
-                Constants.defaultLocalScreenCode
+            var nativeScreenCode = AppPreference(this@MainActivity).retrieveValueByKey(
+                Constants.nativeScreenCode,
+                Constants.defaultNativeScreenCode
             )
 
             ApiClient.client().create(ApiInterface::class.java)
-                .getTime(localScreenCode).enqueue(object : Callback<List<TimeData>> {
+                .getTime(nativeScreenCode).enqueue(object : Callback<List<TimeData>> {
                     override fun onResponse(
                         call: Call<List<TimeData>>,
                         response: Response<List<TimeData>>
@@ -1001,7 +1004,12 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             Constants.playlistSettingsMode,
             Constants.defaultPlaylistSettingsMode
         ).toInt()
-        if (savedPlaySetting == R.id.btnNative) {
+        if (savedPlaySetting == R.id.btnWeb) {
+            binding.webView.isEnabled = true
+            binding.webView.isVisible = true
+            binding.webView.loadUrl(REAL_URL)
+            dialog.dismiss()
+        } else {
             binding.webView.stopLoading()
             binding.webView.isEnabled = false
             binding.webView.isVisible = false
@@ -1020,11 +1028,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 dialogBinding.tvNativeScreenCode.text = "Native Code: $nativeScreenCode"
             }
 //                dialog.dismiss()
-        } else {
-            binding.webView.isEnabled = true
-            binding.webView.isVisible = true
-            binding.webView.loadUrl(REAL_URL)
-            dialog.dismiss()
         }
     }
 
@@ -1102,7 +1105,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                     Constants.defaultPlaylistSettingsMode
                 ).toInt()
                 if (isFirstRunSetting) {
-                    radioGroup.check(R.id.btnWeb)
+                    radioGroup.check(R.id.btnNative)
                     AppPreference(this@MainActivity).setFirstTimeRunSettings(false)
                 }
                 if (savedPlaySetting != null && savedPlaySetting != -1) {
@@ -1182,19 +1185,19 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             /* when app in foreground state then acquires wakelock */
             checkOverlayPermission()
             checkWritePermission()
-            if (isTimerSet) {
-                Log.d(TAG2, "onResume")
-                if (!wakeLock.isHeld) {
-                    wakeLock.acquire()
-                    Log.d(TAG2, "wakelock acquired")
-                }
-            } else {
-                Settings.System.putString(
-                    contentResolver,
-                    Settings.System.SCREEN_OFF_TIMEOUT,
-                    defaultValue
-                )
-            }
+//            if (isTimerSet) {
+//                Log.d(TAG2, "onResume")
+//                if (!wakeLock.isHeld) {
+//                    wakeLock.acquire()
+//                    Log.d(TAG2, "wakelock acquired")
+//                }
+//            } else {
+//                Settings.System.putString(
+//                    contentResolver,
+//                    Settings.System.SCREEN_OFF_TIMEOUT,
+//                    defaultValue
+//                )
+//            }
         } catch (e: Exception) {
             Toast.makeText(
                 this,
@@ -1222,11 +1225,11 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 if (wakeLock.isHeld) {
                     wakeLock.release()
                 }
-                Settings.System.putString(
-                    contentResolver,
-                    Settings.System.SCREEN_OFF_TIMEOUT,
-                    defaultValue
-                )
+//                Settings.System.putString(
+//                    contentResolver,
+//                    Settings.System.SCREEN_OFF_TIMEOUT,
+//                    defaultValue
+//                )
             }
         } catch (e: Exception) {
             Toast.makeText(

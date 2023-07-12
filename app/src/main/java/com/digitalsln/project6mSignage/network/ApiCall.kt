@@ -50,13 +50,13 @@ class ApiCall(context: Context) {
             var log = "$logTime Calling backend API to get timings"
             Log.d(TAG, "$log")
             appLogger.appendLog(log)
-            var localScreenCode = AppPreference(context).retrieveLocalScreenCode(
-                Constants.localScreenCode,
-                Constants.defaultLocalScreenCode
+            var nativeScreenCode = AppPreference(context).retrieveValueByKey(
+                Constants.nativeScreenCode,
+                Constants.defaultNativeScreenCode
             )
 
             ApiClient.client().create(ApiInterface::class.java)
-                .getTime(localScreenCode).enqueue(object : Callback<List<TimeData>> {
+                .getTime(nativeScreenCode).enqueue(object : Callback<List<TimeData>> {
                     override fun onResponse(
                         call: Call<List<TimeData>>,
                         response: Response<List<TimeData>>
