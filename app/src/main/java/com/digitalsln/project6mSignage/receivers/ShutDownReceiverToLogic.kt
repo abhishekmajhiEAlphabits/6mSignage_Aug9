@@ -35,9 +35,9 @@ class ShutDownReceiverToLogic : BroadcastReceiver() {
             appLogger.appendLog(log)
             Log.d(TAG, "inside shutdown receiver toLogic")
             /* if wakelock is acquired it is released to turn off screen at set time */
-            if (MainActivity.wakeLock.isHeld) {
-                MainActivity.wakeLock.release()
-            }
+//            if (MainActivity.wakeLock.isHeld) {
+//                MainActivity.wakeLock.release()
+//            }
 
             var isTimeOutSet = Settings.System.putString(
                 context!!.applicationContext.contentResolver,

@@ -318,9 +318,9 @@ class ApiCall(context: Context) {
             /* starts service to initiate handle screen on/off*/
             startService()
 
-            if (!MainActivity.wakeLock.isHeld) {
-                MainActivity.wakeLock.acquire()
-            }
+//            if (!MainActivity.wakeLock.isHeld) {
+//                MainActivity.wakeLock.acquire()
+//            }
 
         } catch (e: Exception) {
             Toast.makeText(

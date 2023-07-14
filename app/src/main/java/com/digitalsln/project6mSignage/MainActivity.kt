@@ -127,15 +127,6 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             }
             AppPreference(this@MainActivity).saveDefaultTimeOut(defaultValue!!, Constants.timeOut)
 
-            /* creates wakelock and acquires it to keep screen on */
-            powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
-            wakeLock = powerManager.newWakeLock(
-                PowerManager.FULL_WAKE_LOCK or
-                        PowerManager.ACQUIRE_CAUSES_WAKEUP or
-                        PowerManager.ON_AFTER_RELEASE, "appname::WakeLock"
-            )
-            wakeLock.acquire()
-
             /* initializes firebase */
             initFirebase()
 
@@ -166,6 +157,19 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 }
 
             })
+
+            /* creates wakelock and acquires it to keep screen on */
+            powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+            wakeLock = powerManager.newWakeLock(
+                PowerManager.FULL_WAKE_LOCK or
+                        PowerManager.ACQUIRE_CAUSES_WAKEUP or
+                        PowerManager.ON_AFTER_RELEASE, "appname::WakeLock"
+            )
+            if (wakeLock != null) {
+                if (!wakeLock!!.isHeld) {
+                    wakeLock!!.acquire()
+                }
+            }
 
         } catch (e: Exception) {
             Toast.makeText(
@@ -289,9 +293,9 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             /* starts service to initiate handle screen on/off*/
             startService()
 
-            if (!wakeLock.isHeld) {
-                wakeLock.acquire()
-            }
+//            if (!wakeLock.isHeld) {
+//                wakeLock.acquire()
+//            }
 
 
         } catch (e: Exception) {
@@ -331,9 +335,9 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     /* starts scheduler for calling the api everyday at scheduled time */
     private fun startScheduler() {
         try {
-            if (!wakeLock.isHeld) {
-                wakeLock.acquire()
-            }
+//            if (!wakeLock.isHeld) {
+//                wakeLock.acquire()
+//            }
 
             /* gets the local screen code and screen code from browser */
             val localScreenCode = AppPreference(this@MainActivity).retrieveLocalScreenCode(
@@ -714,8 +718,10 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             cancelMultipleAlarms() //cancels all alarms
             callApi()//recall api to get new times after refresh
             scheduleApiCallTimer()
-            if (!wakeLock.isHeld) {
-                wakeLock.acquire()
+            if (wakeLock != null) {
+                if (!wakeLock!!.isHeld) {
+                    wakeLock!!.acquire()
+                }
             }
 
             /* checks if the app is run first time */
@@ -1188,13 +1194,15 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             /* when app in foreground state then acquires wakelock */
             checkOverlayPermission()
             checkWritePermission()
-//            if (isTimerSet) {
-//                Log.d(TAG2, "onResume")
-//                if (!wakeLock.isHeld) {
-//                    wakeLock.acquire()
-//                    Log.d(TAG2, "wakelock acquired")
-//                }
-//            } else {
+            if (isTimerSet) {
+                Log.d(TAG2, "onResume")
+                if (wakeLock != null) {
+                    if (!wakeLock!!.isHeld) {
+                        wakeLock!!.acquire()
+                    }
+                }
+            }
+//            else {
 //                Settings.System.putString(
 //                    contentResolver,
 //                    Settings.System.SCREEN_OFF_TIMEOUT,
@@ -1225,8 +1233,10 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
             if (isTimerSet) {
                 Log.d(TAG2, "onPause")
             } else {
-                if (wakeLock.isHeld) {
-                    wakeLock.release()
+                if (wakeLock != null) {
+                    if (wakeLock!!.isHeld) {
+                        wakeLock!!.release()
+                    }
                 }
 //                Settings.System.putString(
 //                    contentResolver,
@@ -1240,7 +1250,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 "Permissions not granted",
                 Toast.LENGTH_SHORT
             ).show()
-            Log.d(TAG2, "abhi : $e")
+            Log.d(TAG2, "abhis : $e")
         }
     }
 
@@ -1277,7 +1287,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
 
     companion object {
         var isTimerSet = false
-        lateinit var wakeLock: PowerManager.WakeLock
+        var wakeLock: PowerManager.WakeLock? = null
         const val REAL_URL = "https://6lb.menu/signage"
         const val TEST_URL = "https://test.6lb.menu/signage"
         private const val LAST_WEB_URL = "web.url.last"
