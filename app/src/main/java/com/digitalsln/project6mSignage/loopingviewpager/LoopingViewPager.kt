@@ -28,6 +28,7 @@ class LoopingViewPager : ViewPager {
     private lateinit var playlistManager: PlaylistManager
     private lateinit var slideDurations: LongArray
     private val TAG = "TvTimer"
+    var duration = 0L
 
     //AutoScroll
     private var interval = 5000
@@ -109,7 +110,12 @@ class LoopingViewPager : ViewPager {
                 currentPagePosition = position
                 if (isAutoScrollResumed) {
                     autoScrollHandler.removeCallbacks(autoScrollRunnable)
-                    var duration = slideDurations[position - 1]
+                    if (position > 0) {
+                        duration = slideDurations[position - 1]
+                    } else {
+                        duration = slideDurations[position]
+                    }
+
                     Log.d(TAG, "duration :: $duration")
                     autoScrollHandler.postDelayed(
                         autoScrollRunnable, duration

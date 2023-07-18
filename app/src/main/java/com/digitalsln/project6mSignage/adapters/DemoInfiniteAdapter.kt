@@ -82,7 +82,7 @@ class DemoInfiniteAdapter(
 //            Log.d("TvTimer", "listElseIf :: $listPosition")
             Log.d(
                 "TvTimer",
-                "Playing image :: FilePosition : $listPosition and FilePath : ${itemList!![listPosition].slideFilePath}"
+                "Playing image :: FilePosition : $listPosition and FilePath : ${itemList.toString()}"
             )
 //            videoView.stopPlayback()
             videoView.visibility = View.GONE
@@ -111,10 +111,12 @@ class DemoInfiniteAdapter(
     }
 
     fun setFileDescriptors(fileDescriptors: ArrayList<FileDescriptors>) {
-        if (this.itemList!!.size != fileDescriptors.size) {
-            this.itemList = fileDescriptors
-            notifyDataSetChanged()
-        }
+//        if (this.itemList!!.size != fileDescriptors.size) {
+//            this.itemList = fileDescriptors
+//            notifyDataSetChanged()
+//        }
+        this.itemList = fileDescriptors
+        notifyDataSetChanged()
     }
 
     companion object {

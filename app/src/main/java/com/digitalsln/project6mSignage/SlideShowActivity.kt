@@ -123,6 +123,7 @@ class SlideShowActivity : AppCompatActivity() {
         playlistManager.fileDescriptorData.observe(this, Observer {
 //            Log.d(TAG, "inside file observer")
             getMediaFilePaths()
+            Log.d("abhi","observer ::$fileDescriptors")
             adapter!!.setFileDescriptors(fileDescriptors)
         })
     }
@@ -133,6 +134,7 @@ class SlideShowActivity : AppCompatActivity() {
     }
 
     private fun getMediaFilePaths() {
+        Log.d("abhi","getfilepath ::$fileDescriptors")
         fileDescriptors = playlistManager.getDownloadedFilePath()
     }
 
