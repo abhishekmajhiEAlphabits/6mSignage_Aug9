@@ -1215,7 +1215,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 "Permissions not granted",
                 Toast.LENGTH_SHORT
             ).show()
-            Log.d(TAG2, "abhi : $e")
+            Log.d(TAG2, ": $e")
         }
     }
 
@@ -1250,7 +1250,7 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
                 "Permissions not granted",
                 Toast.LENGTH_SHORT
             ).show()
-            Log.d(TAG2, "abhis : $e")
+            Log.d(TAG2, " : $e")
         }
     }
 
