@@ -28,7 +28,7 @@ class AppLogger {
                 buf.append(text)
                 buf.newLine()
                 buf.close()
-            } catch (e: IOException) {
+            } catch (e: Exception) {
                 Log.d(TAG, "File log write error : $e")
                 e.printStackTrace()
             }

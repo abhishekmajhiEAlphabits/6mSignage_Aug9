@@ -7,15 +7,20 @@ import android.content.SharedPreferences
 class AppPreference(context: Context) {
 
     var sharedPreference: SharedPreferences? = null
+    var sharedIntervalPreference: SharedPreferences? = null
 
     companion object {
         const val PREF_NAME = "tvApp"
+        const val INTERVAL_PREF_NAME = "intervalPref"
         const val DEFAULT_LAUNCHER = "launcher"
     }
 
     init {
         if (sharedPreference == null)
             sharedPreference = context.getSharedPreferences(PREF_NAME, MODE_PRIVATE)
+
+        if (sharedIntervalPreference == null)
+            sharedIntervalPreference = context.getSharedPreferences(INTERVAL_PREF_NAME, MODE_PRIVATE)
     }
 
     fun isAppDefaultLauncher(): Boolean {
@@ -35,6 +40,15 @@ class AppPreference(context: Context) {
 
     fun retrieveValueByKey(key: String, default: String): String {
         return sharedPreference?.getString(key, default)!!
+    }
+
+    fun saveIntervalKeyValue(value: String, key: String) {
+        if (sharedIntervalPreference == null) return
+        sharedIntervalPreference!!.edit().putString(key, value).apply()
+    }
+
+    fun retrieveIntervalValueByKey(key: String, default: String): String {
+        return sharedIntervalPreference?.getString(key, default)!!
     }
 
     fun saveLocalScreenCode(value: String, key: String) {

@@ -13,6 +13,7 @@ import com.digitalsln.project6mSignage.MainActivity
 import com.digitalsln.project6mSignage.PlaylistNotBoundActivity
 import com.digitalsln.project6mSignage.R
 import com.digitalsln.project6mSignage.network.PlaylistManager
+import com.digitalsln.project6mSignage.tvLauncher.utilities.AppPreference
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -27,6 +28,7 @@ class FirebaseMessageService : FirebaseMessagingService() {
         Log.d("tokens", "msg received: ${remoteMessage.notification?.title}")
         if (remoteMessage.notification != null) {
             playlistManager.deleteNDownloadData()
+            AppPreference(this).sharedIntervalPreference?.edit()?.clear()?.apply()
             sendNotification(remoteMessage)
         }
     }

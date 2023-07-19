@@ -5,6 +5,7 @@ import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
@@ -21,6 +22,9 @@ import com.digitalsln.project6mSignage.loopingviewpager.LoopingViewPager
 import com.digitalsln.project6mSignage.model.FileDescriptors
 import com.digitalsln.project6mSignage.network.PlaylistManager
 import com.digitalsln.project6mSignage.receivers.DownloadsReceiver
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 
 class SlideShowActivity : AppCompatActivity() {
@@ -61,8 +65,8 @@ class SlideShowActivity : AppCompatActivity() {
             fileDescriptors = ArrayList<FileDescriptors>()
             fileDescriptors.clear()
 
-            fileDescriptors.add(FileDescriptors(100, 2, "", false, 10))
-            fileDescriptors.add(FileDescriptors(100, 2, "", false, 10))
+//            fileDescriptors.add(FileDescriptors(100, 2, "", false, 10))
+//            fileDescriptors.add(FileDescriptors(100, 2, "", false, 10))
 
             try {
                 val mScroller = ViewPager::class.java.getDeclaredField("mScroller")
@@ -81,17 +85,16 @@ class SlideShowActivity : AppCompatActivity() {
 
             viewPager.setPageTransformer(true, FadePageTransformer())
 
+            downloadsReceiver = DownloadsReceiver()
+            registerDownloadReceiver()
+
+
+            getMediaFilePaths()
+            setupObservers()
 
             adapter = DemoInfiniteAdapter(fileDescriptors, true)
             viewPager.adapter = adapter
 
-            downloadsReceiver = DownloadsReceiver()
-            registerDownloadReceiver()
-
-            Log.d(TAG, "descriptorMain :: $fileDescriptors")
-
-            getMediaFilePaths()
-            setupObservers()
         } catch (e: Exception) {
             Log.d(TAG, "error in onCreate :: $e")
         }
@@ -115,15 +118,29 @@ class SlideShowActivity : AppCompatActivity() {
     }
 
     private fun setupObservers() {
+
         downloadsReceiver.downloadState.observe(this, Observer {
 //            Log.d(TAG, "inside observer")
             getMediaFilePaths()
             adapter!!.setFileDescriptors(fileDescriptors)
         })
+
+
         playlistManager.fileDescriptorData.observe(this, Observer {
 //            Log.d(TAG, "inside file observer")
-            getMediaFilePaths()
-            adapter!!.setFileDescriptors(fileDescriptors)
+//            getMediaFilePaths()
+//            adapter!!.setFileDescriptors(fileDescriptors)
+//            adapter?.notifyDataSetChanged()
+            if(it.isNotEmpty()){
+                if(it.equals("init")){
+                    finish()
+                    onBackPressed()
+                }else{
+                    adapter = DemoInfiniteAdapter(fileDescriptors, true)
+                    viewPager.adapter = adapter
+                }
+            }
+
         })
     }
 

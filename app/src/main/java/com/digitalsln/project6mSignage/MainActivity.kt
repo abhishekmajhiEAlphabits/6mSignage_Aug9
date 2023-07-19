@@ -697,6 +697,8 @@ class MainActivity : AppCompatActivity(), DeviceConnectionListener {
     /*calls the api when refresh button is clicked*/
     private fun refreshButtonCall() {
         try {
+
+            AppPreference(this).sharedIntervalPreference?.edit()?.clear()?.apply()
             /* gets the local screen code and screen code from browser */
             val localScreenCode = AppPreference(this@MainActivity).retrieveLocalScreenCode(
                 Constants.localScreenCode,

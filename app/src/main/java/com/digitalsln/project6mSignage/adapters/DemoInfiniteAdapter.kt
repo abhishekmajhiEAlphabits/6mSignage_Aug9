@@ -13,12 +13,14 @@ import android.widget.VideoView
 import com.digitalsln.project6mSignage.R
 import com.digitalsln.project6mSignage.loopingviewpager.LoopingPagerAdapter
 import com.digitalsln.project6mSignage.model.FileDescriptors
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class DemoInfiniteAdapter(
     itemList: ArrayList<FileDescriptors>,
     isInfinite: Boolean
 ) : LoopingPagerAdapter<Int>(itemList, isInfinite) {
-
 
     override fun getItemViewType(listPosition: Int): Int {
         return if (itemList!![listPosition].contentType == 3) 3
@@ -52,16 +54,20 @@ class DemoInfiniteAdapter(
             imageView.visibility = View.GONE
             if (itemList!![listPosition].slideFilePath != null && itemList!![listPosition].isFileExist) {
                 videoView.visibility = View.VISIBLE
+                Log.d("TvTimer","File exist : -  ${itemList!![listPosition].slideFilePath}")
                 videoView.setVideoURI(Uri.parse(itemList!![listPosition].slideFilePath))
-                val mediaController = MediaController(videoView.context)
-                mediaController.setAnchorView(videoView)
-                var duration = itemList!![listPosition - 1].interval
+//                val mediaController = MediaController(videoView.context)
+//                mediaController.setAnchorView(videoView)
+
 
                 videoView.setOnPreparedListener {
-                    Handler().postDelayed({
-                        videoView!!.start()
-                        videoView!!.setBackgroundColor(Color.TRANSPARENT)
-                    }, duration.toLong() * 1000)
+                    videoView!!.start()
+                    it.start()
+                    videoView!!.setBackgroundColor(Color.TRANSPARENT)
+//                    Handler().postDelayed({
+//                        videoView!!.start()
+//                        videoView!!.setBackgroundColor(Color.TRANSPARENT)
+//                    }, duration.toLong() * 1000)
                 }
                 videoView!!.setOnCompletionListener {
                     videoView!!.start()
@@ -69,6 +75,7 @@ class DemoInfiniteAdapter(
                 }
 
             } else {
+                Log.d("TvTimer","Video File Not Exist..");
                 videoView = convertView.findViewById<View>(R.id.video) as VideoView
                 imageView = convertView.findViewById<View>(R.id.image) as ImageView
 //                videoView.stopPlayback()
@@ -77,25 +84,29 @@ class DemoInfiniteAdapter(
                 imageView.setImageResource(R.drawable.loading)
             }
         } else if (viewType == 2) {
+            Log.d("TvTimer","viewType 2");
             videoView = convertView.findViewById<View>(R.id.video) as VideoView
             imageView = convertView.findViewById<View>(R.id.image) as ImageView
 //            Log.d("TvTimer", "listElseIf :: $listPosition")
             Log.d(
                 "TvTimer",
-                "Playing image :: FilePosition : $listPosition and FilePath : ${itemList.toString()}"
+                "Playing image :: FilePosition : $listPosition and FilePath : ${itemList!![listPosition].slideFilePath}"
             )
 //            videoView.stopPlayback()
             videoView.visibility = View.GONE
             imageView.visibility = View.VISIBLE
             if (itemList!![listPosition].slideFilePath != null && itemList!![listPosition].isFileExist) {
+                Log.d("TvTimer","ImageFile path exist");
                 imageView.setImageURI(Uri.parse(itemList!![listPosition].slideFilePath))
             } else {
+                Log.d("TvTimer","ImageFile path NOT exist");
 //                imageView.visibility = View.GONE
                 imageView.visibility = View.VISIBLE
                 imageView.setImageResource(R.drawable.loading)
             }
 
         } else {
+            Log.d("TvTimer","We are in else part now ....");
             videoView = convertView.findViewById<View>(R.id.video) as VideoView
             imageView = convertView.findViewById<View>(R.id.image) as ImageView
 //            Log.d("TvTimer", "listElse :: $listPosition")
@@ -111,12 +122,13 @@ class DemoInfiniteAdapter(
     }
 
     fun setFileDescriptors(fileDescriptors: ArrayList<FileDescriptors>) {
-//        if (this.itemList!!.size != fileDescriptors.size) {
-//            this.itemList = fileDescriptors
-//            notifyDataSetChanged()
-//        }
-        this.itemList = fileDescriptors
-        notifyDataSetChanged()
+        //        var size = this.itemList!!.size;
+        //        var fileDescriptorSize = fileDescriptors.size;
+        //        Log.d("kamothi","item list size $size && fileDescriptor Size is $fileDescriptorSize");
+        //        if (this.itemList!!.size != fileDescriptors.size) {
+        //            this.itemList = fileDescriptors
+        //            notifyDataSetChanged()
+        //        }
     }
 
     companion object {

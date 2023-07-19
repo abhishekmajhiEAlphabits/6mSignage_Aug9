@@ -49,7 +49,7 @@ object Constants {
     const val defaultDays = "DAYS"
 
     const val playlistSize = "PLAYLIST_SIZE"
-    const val defaultPlaylistSize = "6"
+    const val defaultPlaylistSize = "0"
 
     const val playlistSettingsMode = "PLAY_SETTINGS_MODE"
     const val defaultPlaylistSettingsMode = "-1"

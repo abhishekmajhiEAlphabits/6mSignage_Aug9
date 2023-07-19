@@ -13,7 +13,7 @@ class DownloadsReceiver : BroadcastReceiver() {
     private val TAG ="TvTimer"
 
     override fun onReceive(context: Context?, intent: Intent?) {
-        Log.d(TAG, "download complete")
+        Log.d("HK", "download complete")
         _downloadState.value = "file downloaded"
 
     }
