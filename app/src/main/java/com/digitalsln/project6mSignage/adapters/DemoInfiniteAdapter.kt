@@ -23,8 +23,8 @@ class DemoInfiniteAdapter(
 ) : LoopingPagerAdapter<Int>(itemList, isInfinite) {
 
     override fun getItemViewType(listPosition: Int): Int {
-        return if (itemList!![listPosition].contentType == 3) 3
-        else 2
+            return if (itemList!![listPosition]?.contentType == 3) 3
+            else 2
     }
 
     override fun inflateView(
@@ -88,10 +88,10 @@ class DemoInfiniteAdapter(
             videoView = convertView.findViewById<View>(R.id.video) as VideoView
             imageView = convertView.findViewById<View>(R.id.image) as ImageView
 //            Log.d("TvTimer", "listElseIf :: $listPosition")
-            Log.d(
-                "TvTimer",
-                "Playing image :: FilePosition : $listPosition and FilePath : ${itemList!![listPosition].slideFilePath}"
-            )
+//            Log.d(
+//                "TvTimer",
+//                "Playing image :: FilePosition : $listPosition and FilePath : ${itemList!![listPosition].slideFilePath}"
+//            )
 //            videoView.stopPlayback()
             videoView.visibility = View.GONE
             imageView.visibility = View.VISIBLE

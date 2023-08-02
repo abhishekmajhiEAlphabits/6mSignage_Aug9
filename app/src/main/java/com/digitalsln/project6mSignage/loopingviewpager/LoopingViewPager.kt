@@ -23,7 +23,7 @@ class LoopingViewPager : ViewPager {
     protected var wrapContent = true
 
     //    private var staticDurations = longArrayOf(2000, 2000, 2000, 2000, 2000, 2000, 2000,2000, 2000)
-    private var staticDurations = LongArray(20) { i -> ((1 + 10) * 1000).toLong() }
+    private var staticDurations = LongArray(2000) { i -> ((1 + 10) * 1000).toLong() }
     var counter = 0
     private lateinit var playlistManager: PlaylistManager
     private lateinit var slideDurations: LongArray
@@ -91,6 +91,11 @@ class LoopingViewPager : ViewPager {
                     ).toLong() * 1000
 
                 var key = "$nativeScreenCode-$i-${Constants.interval}"
+                var key2 = AppPreference(context).retrieveIntervalValueByKey(
+                    "$nativeScreenCode-$i-${Constants.interval}",
+                    Constants.defaultInterval
+                ).toLong() * 1000
+                Log.d("abhi","keys: $key2 : $responseSize")
             }
         } else {
             slideDurations = staticDurations
@@ -115,8 +120,10 @@ class LoopingViewPager : ViewPager {
                     autoScrollHandler.removeCallbacks(autoScrollRunnable)
                     if (position > 0) {
                         duration = slideDurations[position - 1]
+                        Log.d("abhi","duration : $duration")
                     } else {
                         duration = slideDurations[position]
+                        Log.d("abhi","duration : $duration")
                     }
 
                     autoScrollHandler.postDelayed(

@@ -112,6 +112,11 @@ class PlaylistManager(context: Context) {
                                                     interval.toString(),
                                                     "$nativeScreenCode-$i-${Constants.interval}"
                                                 )
+                                                var key2 = AppPreference(context).retrieveIntervalValueByKey(
+                                                    "$nativeScreenCode-$i-${Constants.interval}",
+                                                    Constants.defaultInterval
+                                                )
+//                                                Log.d("abhi","keys: $key2")
                                                 if (fromDate != null) {
                                                     AppPreference(context).saveKeyValue(
                                                         fromDate,

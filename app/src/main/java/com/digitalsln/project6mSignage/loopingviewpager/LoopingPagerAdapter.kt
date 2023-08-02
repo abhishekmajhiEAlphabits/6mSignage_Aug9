@@ -1,5 +1,6 @@
 package com.digitalsln.project6mSignage.loopingviewpager
 
+import android.util.Log
 import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
@@ -122,6 +123,7 @@ abstract class LoopingPagerAdapter<T>(
         } else {
             count
         }
+        Log.d("kamothi","Count is :: $count");
     }
 
     /**
@@ -139,6 +141,7 @@ abstract class LoopingPagerAdapter<T>(
         get() = itemList?.size ?: 0
 
     private fun getListPosition(position: Int): Int {
+        Log.d("kamothi","position $position and count is $count and infinite is $isInfinite and canInfinite is $canInfinite");
         if (!(isInfinite && canInfinite)) return position
         return when {
             position == 0 -> {
